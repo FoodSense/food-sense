@@ -11,21 +11,17 @@ import RPi.GPIO as GPIO
 from picamera import PiCamera
 from scale import Scale
 
-# Google API and Authentication modules
-from googleapiclient import discovery
-#from oauth2client.client import GoogleCredentials
+# Google Authentication and API modules
 from google.oauth2 import service_account
-
-# Google Vision modules
-from google.cloud import vision
-from google.cloud.vision import types
+from googleapiclient import discovery
 
 
+# Authnticate with Google Vision API
 def authenticate():
     print('Authenticating with Google Vision API')
     
     SCOPES = ['https://www.googleapis.com/auth/cloud-vision']
-    SERVICE_ACCOUNT_FILE = 'fs-service-account.json'
+    SERVICE_ACCOUNT_FILE = '/home/pi/fs-raspi.json'
     
     credentials = service_account.Credentials.from_service_account_file(
         SERVICE_ACCOUNT_FILE, scopes=SCOPES)
@@ -33,16 +29,22 @@ def authenticate():
     return discovery.build('vision', 'v1', credentials=credentials)
 
 
+# Initialize scale, reset and tare
 def initScale():
     print('Initializing scale')
     scale = Scale()
-    scale.setReferenceUnit(21)
+    scale.setReferenceUnit(20)  # Originally 21
     scale.reset()
-    scale.tare()
+    scale.tare()                # Will need to decide how to handle this on system reset.
+                                # It may be a good idea to default to the last known weight
+                                # on the scale following a tare.
+                                # This creates a problem where the system will not know
+                                # if a user has added or removed anything in the meantime
 
     return scale
 
 
+# Use Pi Camera to capture an image; toggle LEDs
 def getImage():
     filename = str(time.time())
     filename += '.png'
@@ -50,6 +52,8 @@ def getImage():
     
     print("Initializing camera")
     camera = PiCamera()
+
+    # Turn on LEDs here
 
     print("Starting camera preview")
     camera.start_preview()
@@ -59,21 +63,42 @@ def getImage():
     camera.close()
     print("Image captured")
     
+    # Turn off LEDs here
+    
     return filename
 
 
+# Record the current weight on the scale
 def getWeight(scale):
-    val = (scale.getMeasure()) / 13
-        
-    if val < 0:
-        val = abs(val)
-    print("Weight recorded: {0: 4.6f} g".format(val))
-    print('')
+    itemRemoved = False
     
-    # Weight needs to be updated each time it's read and
-    # the difference will be recorded as the item weight
+    # Will have to get prevWeight from db, using 0 for now
+    prevWeight = 0
+    
+    currWeight = (scale.getMeasure()) / 13
+    
+    # Temporarily account for magnitude mismatch from ckt
+    # Will need to be fixed later
+    if currWeight < 0:
+        currWeight = abs(currWeight)
+    print("Weight recorded: {0: 4.6f} g".format(currWeight))
+    print('')
+
+    # Weight of new item is difference between current and previous weights
+    itemWeight = currWeight - prevWeight
+
+    # If an item is removed, weight difference will be negative
+    if itemWeight < 0:
+        itemWeight = abs(itemWeight)
+        itemRemoved = True
+        
+    # Store currWeight
+    # Store itemWeight
+    
+    return itemRemoved
 
 
+# Send JSON request to Vision API
 def detect(service, filename):
     with open(filename, 'rb') as image:
         base64img = base64.b64encode(image.read())
@@ -83,11 +108,11 @@ def detect(service, filename):
                     'content': base64img.decode('UTF-8')
                 },
                 'features': [{
-                    'type': 'LABEL_DETECTION',
+                    'type': 'WEB_DETECTION',
                     'maxResults': 3
                 },
                 {
-                    'type': 'WEB_DETECTION',
+                    'type': 'LABEL_DETECTION',
                     'maxResults': 3
                 }]
             }]
@@ -96,47 +121,73 @@ def detect(service, filename):
     return service_request.execute()
 
 
+# Parse the response JSON to match item
 def parse(response):
-    noLabel = False
-    labelResults = 3
-    itemLabels = ['granny smith', 'Granny Smith', 'bread', 'apple', 'banana', 'milk', 'fruit', 'vegitable']
-
+    match = False
+    itemLabels = ['granny smith', 'bread', 'apple', 'banana', 'milk', 'fruit', 'vegitable']
+    itemDescriptors = ['fruit', 'vegitable', 'produce', 'organic', 'apple', 'granny smith']
+    
     #print('Response JSON:')
     #print(json.dumps(response, indent=4, sort_keys=True))
     #print('')
     
+    # Search best guess label for item match
     for i in range(len(itemLabels)): 
         if itemLabels[i] in response["responses"][0]['webDetection']['bestGuessLabels'][0]['label']:
             print('Match found: ' + itemLabels[i])
+            match = True
+    
+    # If best guess label does not match, search label annotations
+    if match is False:
+        for i in range(3):
+            for j in range(len(itemDescriptors)):
+                if itemDescriptors[j] in response["responses"][0]['labelAnnotations'][i]['description']:
+                    print('Label found: ' + itemDescriptors[j])
+                    match = True
 
 
+# Entrypoint
 def main():
+    # Set up GPIO settings for door
     DOOR = 27
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
     
+    # Authenticate and init scale
     service = authenticate()
     scale = initScale()
 
     try:
+        # Loop unti an execption is thrown
         while True:
+            
+            # Door is closed
             while True:# (GPIO.input(DOOR) == 1):
                 print("Door is closed")
                 time.sleep(1)
-
+                
+                # Door has been opened
                 if True:# (GPIO.input(DOOR) == 0):
                     print("Door was opened")
                     
+                    # Waiting for door to be closed again
                     while False:# (GPIO.input(DOOR) == 0):
                         print("Waiting for door to close")
                         time.sleep(1)          
                     print("Door was closed")
                     
-                    getWeight(scale)
-                    testVision()
-                    filename = getImage()
-                    response = detect(service, 'grannysmith.png')
-                    parse(response)
+                    itemRemoved = getWeight(scale)
+                    if itemRemoved is True:
+                        print('Item has been removed')
+                        # Find item to remove from db / list
+                    else: 
+                        # An item has been added
+                        #filename = getImage()
+                        response = detect(service, 'grannysmith.png')
+                        parse(response)
+            
+            # Door was open when program started;
+            # Warn that is must be closed first
             print('Door is open, please close')
     
     except KeyboardInterrupt:
@@ -144,5 +195,6 @@ def main():
         sys.exit()
 
 
+# Call main
 if __name__ == '__main__':
     main()
