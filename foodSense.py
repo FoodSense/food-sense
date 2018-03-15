@@ -20,12 +20,11 @@ from googleapiclient import discovery
 def authenticate():
     print('Authenticating with Google Vision API')
     
-    SCOPES = ['https://www.googleapis.com/auth/cloud-vision']
-    SERVICE_ACCOUNT_FILE = '/home/pi/fs-raspi.json'
+    scopes = ['https://www.googleapis.com/auth/cloud-vision']
+    serviceAccount = '/home/pi/fs-raspi.json'
     
     credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE, scopes=SCOPES)
-    #credentials = GoogleCredentials.get_application_default()
+        serviceAccount, scopes=scopes)
     return discovery.build('vision', 'v1', credentials=credentials)
 
 
@@ -66,6 +65,14 @@ def getImage():
     # Turn off LEDs here
     
     return filename
+
+
+def readDB():
+    print('Read from DB')
+
+
+def writeDB():
+    print('Write to DB')
 
 
 # Record the current weight on the scale
