@@ -21,7 +21,7 @@ def authenticate():
     print('Authenticating with Google Vision API')
     
     scopes = ['https://www.googleapis.com/auth/cloud-vision']
-    serviceAccount = '/home/pi/fs-raspi.json'
+    serviceAccount = '/home/pi/FoodSense-Service-Account.json'
     
     credentials = service_account.Credentials.from_service_account_file(
         serviceAccount, scopes=scopes)
@@ -152,7 +152,6 @@ def parse(response):
                 if itemDescriptors[j] in response["responses"][0]['labelAnnotations'][i]['description']:
                     print('Label found: ' + itemDescriptors[j])
                     match = True
-    else: # Do nothing
 
 
 # Entrypoint
