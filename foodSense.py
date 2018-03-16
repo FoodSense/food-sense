@@ -131,7 +131,7 @@ def detect(service, filename):
 # Parse the response JSON to match item
 def parse(response):
     match = False
-    itemLabels = ['granny smith', 'bread', 'apple', 'banana', 'milk', 'fruit', 'vegitable']
+    itemNames = ['granny smith', 'bread', 'apple', 'banana', 'milk', 'fruit', 'vegitable']
     itemDescriptors = ['fruit', 'vegitable', 'produce', 'organic', 'apple', 'granny smith']
     
     #print('Response JSON:')
@@ -139,11 +139,12 @@ def parse(response):
     #print('')
     
     # Search best guess label for item match
-    for i in range(len(itemLabels)): 
-        if itemLabels[i] in response["responses"][0]['webDetection']['bestGuessLabels'][0]['label']:
-            print('Match found: ' + itemLabels[i])
+    for i in range(len(itemNames)): 
+        if itemNames[i] in response["responses"][0]['webDetection']['bestGuessLabels'][0]['label']:
+            print('Match found: ' + itemNames[i])
             match = True
-    
+            # Update list here with new item
+
     # If best guess label does not match, search label annotations
     if match is False:
         for i in range(3):
@@ -151,6 +152,7 @@ def parse(response):
                 if itemDescriptors[j] in response["responses"][0]['labelAnnotations'][i]['description']:
                     print('Label found: ' + itemDescriptors[j])
                     match = True
+    else: # Do nothing
 
 
 # Entrypoint
@@ -169,16 +171,16 @@ def main():
         while True:
             
             # Door is closed
-            while True:# (GPIO.input(DOOR) == 1):
+            while True:#GPIO.input(DOOR) is True:
                 print("Door is closed")
                 time.sleep(1)
                 
                 # Door has been opened
-                if True:# (GPIO.input(DOOR) == 0):
+                if True:#GPIO.input(DOOR) is False:
                     print("Door was opened")
                     
                     # Waiting for door to be closed again
-                    while False:# (GPIO.input(DOOR) == 0):
+                    while False:#GPIO.input(DOOR) is False:
                         print("Waiting for door to close")
                         time.sleep(1)          
                     print("Door was closed")
@@ -192,11 +194,11 @@ def main():
                         #filename = getImage()
                         response = detect(service, 'grannysmith.png')
                         parse(response)
-            
+
             # Door was open when program started;
             # Warn that is must be closed first
             print('Door is open, please close')
-    
+
     except KeyboardInterrupt:
         GPIO.cleanup()
         sys.exit()
