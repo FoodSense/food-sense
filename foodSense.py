@@ -1,5 +1,6 @@
 # Include required modules
 import base64
+import csv
 import io
 import json
 import os
@@ -8,6 +9,9 @@ import sys
 
 # Hardware specific modules
 import RPi.GPIO as GPIO
+import spidev as SPI
+#import Adafruit_GPIO.SPI as SPI
+import Adafruit_MCP3008
 from picamera import PiCamera
 from scale import Scale
 
@@ -15,6 +19,11 @@ from scale import Scale
 from google.oauth2 import service_account
 from googleapiclient import discovery
 
+
+# Global variables for adding/removing items
+global scaleLoad       # Current load on scale
+global itemList[]      # List of items
+global weightList[]    # List of weights
 
 # Authnticate with Google Vision API
 def authenticate():
@@ -43,6 +52,29 @@ def initScale():
     return scale
 
 
+# Read temp sensor for current fridge temperature
+def getTemp():
+    print('Reading temperature')
+rom time import sleep
+
+
+def readTemp(mcp):
+    adcValue = mcp.read_adc(0)
+    tempC = adcValue / 10
+    tempF = (tempC * 1.8) + 32
+    print('Current temperature: ' + str(tempC) + ' C / ' + str(tempF) + ' F')
+
+def main():
+    SPI_PORT   = 0
+    SPI_DEVICE = 0
+    mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
+
+    try:
+        while True:
+            readTemp(mcp)
+            sleep(3)
+ 
+
 # Use Pi Camera to capture an image; toggle LEDs
 def getImage():
     filename = str(time.time())
@@ -65,14 +97,6 @@ def getImage():
     # Turn off LEDs here
     
     return filename
-
-
-def readDB():
-    print('Read from DB')
-
-
-def writeDB():
-    print('Write to DB')
 
 
 # Record the current weight on the scale
@@ -99,9 +123,8 @@ def getWeight(scale):
         itemWeight = abs(itemWeight)
         itemRemoved = True
         
-    # Store currWeight
-    # Store itemWeight
-    
+    scaleLoad = currWeight
+    weightList.append(itemWeight)
     return itemRemoved
 
 
@@ -128,22 +151,25 @@ def detect(service, filename):
     return serviceRequest.execute()
 
 
+# Remove item from list based on weight
+def removeItem():
+    print('Removing item')
+
+
 # Parse the response JSON to match item
-def parse(response):
+def addItem(response):
+    print('Adding item')
+
     match = False
     itemNames = ['granny smith', 'bread', 'apple', 'banana', 'milk', 'fruit', 'vegitable']
     itemDescriptors = ['fruit', 'vegitable', 'produce', 'organic', 'apple', 'granny smith']
-    
-    #print('Response JSON:')
-    #print(json.dumps(response, indent=4, sort_keys=True))
-    #print('')
     
     # Search best guess label for item match
     for i in range(len(itemNames)): 
         if itemNames[i] in response["responses"][0]['webDetection']['bestGuessLabels'][0]['label']:
             print('Match found: ' + itemNames[i])
+            itemList.append(itemnames[i])
             match = True
-            # Update list here with new item
 
     # If best guess label does not match, search label annotations
     if match is False:
@@ -151,51 +177,56 @@ def parse(response):
             for j in range(len(itemDescriptors)):
                 if itemDescriptors[j] in response["responses"][0]['labelAnnotations'][i]['description']:
                     print('Label found: ' + itemDescriptors[j])
-                    match = True
 
     # If label anotations does not match, ask user for input
-    # return match
 
 
 # Entrypoint
 def main():
-    # Set up GPIO settings for door
+    # GPIO Pins used
     DOOR = 27
+
+    # Set up GPIO
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    
+ 
+    # Open saved list information and read into global variables
+    itemListFile = open('itemList.csv', 'r+')
+    itemList.append(itemListFile.read())
+
+    weightListFile = open('weightListFile.csv', 'r+')
+    weightlist.append(weightListFile.read())
+
     # Authenticate and init scale
     service = authenticate()
     scale = initScale()
 
     try:
-        # Loop unti an execption is thrown
+        # Loop until an execption is thrown
         while True:
-            
+
             # Door is closed
-            while True:#GPIO.input(DOOR) is True:
+            while GPIO.input(DOOR) is True:
                 print("Door is closed")
                 time.sleep(1)
                 
                 # Door has been opened
-                if True:#GPIO.input(DOOR) is False:
+                if GPIO.input(DOOR) is False:
                     print("Door was opened")
                     
                     # Waiting for door to be closed again
-                    while False:#GPIO.input(DOOR) is False:
+                    while GPIO.input(DOOR) is False:
                         print("Waiting for door to close")
                         time.sleep(1)          
                     print("Door was closed")
                     
                     itemRemoved = getWeight(scale)
                     if itemRemoved is True:
-                        print('Item has been removed')
-                        # Find item to remove from db / list
+                        removeItem()
                     else: 
-                        # An item has been added
-                        #filename = getImage()
-                        response = detect(service, 'grannysmith.png')
-                        parse(response)
+                        filename = getImage()
+                        response = detect(service, filename)
+                        addItem(response)
 
             # Door was open when program started;
             # Warn that is must be closed first
