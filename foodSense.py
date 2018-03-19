@@ -109,7 +109,7 @@ def getWeight(scale):
 def detect(service, filename):
     with open(filename, 'rb') as image:
         base64img = base64.b64encode(image.read())
-        service_request = service.images().annotate(body={
+        serviceRequest = service.images().annotate(body={
             'requests': [{
                 'image': {
                     'content': base64img.decode('UTF-8')
@@ -125,7 +125,7 @@ def detect(service, filename):
             }]
         })
 
-    return service_request.execute()
+    return serviceRequest.execute()
 
 
 # Parse the response JSON to match item
@@ -152,6 +152,9 @@ def parse(response):
                 if itemDescriptors[j] in response["responses"][0]['labelAnnotations'][i]['description']:
                     print('Label found: ' + itemDescriptors[j])
                     match = True
+
+    # If label anotations does not match, ask user for input
+    # return match
 
 
 # Entrypoint
