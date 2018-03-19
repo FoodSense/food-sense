@@ -9,9 +9,7 @@ import sys
 
 # Hardware specific modules
 import RPi.GPIO as GPIO
-import spidev as SPI
-#import Adafruit_GPIO.SPI as SPI
-import Adafruit_MCP3008
+import mcp3008 as MCP
 from picamera import PiCamera
 from scale import Scale
 
@@ -23,7 +21,7 @@ from googleapiclient import discovery
 # Global variables for adding/removing items
 global scaleLoad       # Current load on scale
 global itemList[]      # List of items
-global weightList[]    # List of weights
+
 
 # Authnticate with Google Vision API
 def authenticate():
@@ -35,6 +33,12 @@ def authenticate():
     credentials = service_account.Credentials.from_service_account_file(
         serviceAccount, scopes=scopes)
     return discovery.build('vision', 'v1', credentials=credentials)
+
+
+# Initialize MCP3004 ADC for temp sensor
+def initADC():
+    print('Initializing ADC')
+    return MCP.MCP3008.fixed([mcp3008.CH0])
 
 
 # Initialize scale, reset and tare
@@ -53,27 +57,12 @@ def initScale():
 
 
 # Read temp sensor for current fridge temperature
-def getTemp():
+def getTemp(adc):
     print('Reading temperature')
-rom time import sleep
 
+    value = adc()
+    print('Temperature: ' + str(value))
 
-def readTemp(mcp):
-    adcValue = mcp.read_adc(0)
-    tempC = adcValue / 10
-    tempF = (tempC * 1.8) + 32
-    print('Current temperature: ' + str(tempC) + ' C / ' + str(tempF) + ' F')
-
-def main():
-    SPI_PORT   = 0
-    SPI_DEVICE = 0
-    mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(SPI_PORT, SPI_DEVICE))
-
-    try:
-        while True:
-            readTemp(mcp)
-            sleep(3)
- 
 
 # Use Pi Camera to capture an image; toggle LEDs
 def getImage():
@@ -151,12 +140,12 @@ def detect(service, filename):
     return serviceRequest.execute()
 
 
-# Remove item from list based on weight
+# Remove item from list
 def removeItem():
     print('Removing item')
 
 
-# Parse the response JSON to match item
+# Parse the response JSON to match item and add to list
 def addItem(response):
     print('Adding item')
 
@@ -179,60 +168,53 @@ def addItem(response):
                     print('Label found: ' + itemDescriptors[j])
 
     # If label anotations does not match, ask user for input
+    print('Unable to get a good match. You can retry or manually input the item.')
 
 
 # Entrypoint
 def main():
-    # GPIO Pins used
+    # Pin numbers
     DOOR = 27
 
-    # Set up GPIO
+    # Get up GPIO pins
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
  
-    # Open saved list information and read into global variables
+    # Open file streams for loading/saving item information
     itemListFile = open('itemList.csv', 'r+')
     itemList.append(itemListFile.read())
 
-    weightListFile = open('weightListFile.csv', 'r+')
-    weightlist.append(weightListFile.read())
+    # Begin initializing necessary components
+    service = authenticate()                                    # Authenticate with Vision API
+    adc = initADC()                                             # Create/initialize ADC object for temperature sensor
+    scale = initScale()                                         # Create/initialize HX711 object for scale
 
-    # Authenticate and init scale
-    service = authenticate()
-    scale = initScale()
-
+    # Main block of program
     try:
-        # Loop until an execption is thrown
-        while True:
-
-            # Door is closed
-            while GPIO.input(DOOR) is True:
+        while True:                                             # Loop until an execption is thrown
+            while GPIO.input(DOOR) is True:                     # Door is closed
                 print("Door is closed")
                 time.sleep(1)
                 
-                # Door has been opened
-                if GPIO.input(DOOR) is False:
+                if GPIO.input(DOOR) is False:                   # Door has been opened
                     print("Door was opened")
                     
-                    # Waiting for door to be closed again
-                    while GPIO.input(DOOR) is False:
+                    while GPIO.input(DOOR) is False:            # Waiting for door to be closed again
                         print("Waiting for door to close")
                         time.sleep(1)          
                     print("Door was closed")
                     
-                    itemRemoved = getWeight(scale)
+                    itemRemoved = getWeight(scale)              # Flagged if item was removed from fridge
                     if itemRemoved is True:
-                        removeItem()
+                        removeItem()                            # Remove item from list
                     else: 
-                        filename = getImage()
-                        response = detect(service, filename)
-                        addItem(response)
-
-            # Door was open when program started;
-            # Warn that is must be closed first
-            print('Door is open, please close')
+                        filename = getimage()                   # Take picture with Pi Camera, return file name
+                        response = detect(service, filename)    # Send image to Vision API
+                        addItem(response)                       # Add item to list
+            print('Door is open, please close')                 # Warn user that door must be closed on program init
 
     except KeyboardInterrupt:
+        # Write list values to files
         GPIO.cleanup()
         sys.exit()
 
