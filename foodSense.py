@@ -19,8 +19,9 @@ from googleapiclient import discovery
 
 
 # Global variables for adding/removing items
-global scaleLoad       # Current load on scale
-global itemList[]      # List of items
+global listUpdated = False  # Flagged if item was added/removed
+global scaleLoad            # Current load on scale
+global itemList[]           # List of items
 
 
 # Authnticate with Google Vision API
@@ -211,7 +212,9 @@ def main():
                         filename = getimage()                   # Take picture with Pi Camera, return file name
                         response = detect(service, filename)    # Send image to Vision API
                         addItem(response)                       # Add item to list
-            print('Door is open, please close')                 # Warn user that door must be closed on program init
+                if listUpdated is True:
+                    writeFile()
+            print('Door is open, please close')                 # Warn user to close door on program start
 
     except KeyboardInterrupt:
         # Write list values to files
