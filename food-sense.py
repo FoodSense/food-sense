@@ -8,6 +8,7 @@
 import base64
 import csv
 import json
+import sys
 import time
 
 # Hardware specific modules
@@ -21,16 +22,7 @@ from google.oauth2 import service_account
 from googleapiclient import discovery
 
 
-<<<<<<< HEAD
 ##### Method Implementations #####
-=======
-# Global variables for adding/removing items
-global listUpdated = False  # Flagged if item was added/removed
-global scaleLoad            # Current load on scale
-global itemList[]           # List of items
-
-
->>>>>>> 44a58efaf8e8df590581e09b506fc3a1d4b2f19f
 # Authnticate with Google Vision API
 def authenticate():
     print('Authenticating with Google Vision API')
@@ -108,7 +100,7 @@ def getWeight(scale):
 def getImage():
     filename = str(time.time())
     filename += '.png'
-    #print(filename)
+    print('File name: '.format(filename))
     
     print("Initializing camera")
     camera = PiCamera()
@@ -138,12 +130,12 @@ def detect(service, filename):
                     'content': base64img.decode('UTF-8')
                 },
                 'features': [{
-                    'type': 'WEB_DETECTION',
-                    'maxResults': 3
+                    'type': 'LABEL_DETECTION',
+                    'maxResults': 10
                 },
                 {
-                    'type': 'LABEL_DETECTION',
-                    'maxResults': 3
+                    'type': 'WEB_DETECTION',
+                    'maxResults': 10
                 }]
             }]
         })
@@ -157,32 +149,39 @@ def removeItem():
 
 
 # Parse the response JSON to match item and add to list
-def addItem(itemListFile ,response, weight, filename):
+def parseRespsone(response):
     print('Adding item')
-
+    
     match = False
-    itemNames = ['granny smith', 'bread', 'apple', 'banana', 'milk', 'fruit', 'vegitable']
-    itemDescriptors = ['fruit', 'vegitable', 'produce', 'organic', 'apple', 'granny smith']
+    itemNames = ['apple', 'banana', 'broccoli', 'celery', 'orange', 'onion', 'potato']
+    itemDescriptors = ['fruit', 'vegitable', 'produce', 'organic', 'apple', 'banana', 'broccoli', 'celery', 'orange', 'potato']
+    
+    #print(json.dumps(response, indent=4, sort_keys=True))
     
     # Search best guess label for item match
-    for i in range(len(itemNames)): 
-        if itemNames[i] in response["responses"][0]['webDetection']['bestGuessLabels'][0]['label']:
-            print('Match found: ' + itemNames[i])
-            itemList.append(itemnames[i])
-            match = True
+    #for i in range(len(itemNames)): 
+    #    if itemNames[i] in response["responses"][0]['webDetection']['bestGuessLabels'][0]['label']:
+    #        print('Match found: ' + itemNames[i])
 
-    # If best guess label does not match, search label annotations
-    if match is False:
-        for i in range(3):
-            for j in range(len(itemDescriptors)):
-                if itemDescriptors[j] in response["responses"][0]['labelAnnotations'][i]['description']:
-                    print('Label found: ' + itemDescriptors[j])
+    for i in range(10):
+        print(response['responses'][0]['webDetection']['webEntities'][i]['description'])
 
-    # If label anotations does not match, ask user for input
-    print('Unable to get a good match. You can retry or manually input the item.')
+    # Search web detection lables
+    #if match is False:
+    #    for i in range(10):
+    #        for j in range(len(itemNames)):
+    #            if itemNames[j] in response["responses"][0]['webDetection']['webEntities'][i]['description']:
+    #                print('Web Entity found: ' + itemNames[j])
+    #                match = True
+   
+   # Search label annotations
+    #if match is False:
+    #    for i in range(10):
+    #        for j in range(len(itemNames)):
+    #            if itemNames[j] in response["responses"][0]['labelAnnotations'][i]['description']:
+    #                print('Label found: ' + itemNames[j])
+    #                match = True
 
-    
-    
 # Main method
 def main():
     # Pin numbers
@@ -193,18 +192,18 @@ def main():
     GPIO.setup(DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
  
     # Open file stream for loading/saving item information
-    itemListFile = open('itemList.csv')
+    #itemListFile = open('data/itemList.csv')
   
     # Begin initializing necessary components
-    adc = initADC()                                             # Create/initialize ADC object for temperature sensor
-    scale = initScale()                                         # Create/initialize HX711 object for scale
+    #adc = initADC()                                             # Create/initialize ADC object for temperature sensor
+    #scale = initScale()                                         # Create/initialize HX711 object for scale
 
     # Attempt to authenticate with Vision API
     service = authenticate()
 
     # Main block of program
     try:
-        while True:                                             # Loop until an execption is thrown
+        while True:         # Loop until an execption is thrown
             while True:# GPIO.input(DOOR) is True:              # Door is closed
                 print("Door is closed")
                 time.sleep(1)
@@ -217,30 +216,19 @@ def main():
                         time.sleep(1)          
                     print("Door was closed")
                     
-<<<<<<< HEAD
-                    weight = getWeight(scale)                   # Flagged if item was removed from fridge
-                    
+                    #weight = getWeight(scale)                   # Flagged if item was removed from fridge
+                    weight = 50
                     if weight > 0:
-                        filename = getImage()
-                        response = detect(service, filename)
-                        addItem(itemListFile, response, weight, filename)
+                        #filename = getImage()
+                        response = detect(service, 'samples/apple.jpg')
+                        parseRespsone(response)
                     elif weight < 0:
-                        removeItem(itemListFile, weight)
-                    else: print('Error: weight is 0')
-
+                        removeItem()
+                    else:
+                        print('Error: weight is 0')
+                    sys.exit()
+                    
             print('Door is open, please close')                 # Warn user that door must be closed on program init
-=======
-                    itemRemoved = getWeight(scale)              # Flagged if item was removed from fridge
-                    if itemRemoved is True:
-                        removeItem()                            # Remove item from list
-                    else: 
-                        filename = getimage()                   # Take picture with Pi Camera, return file name
-                        response = detect(service, filename)    # Send image to Vision API
-                        addItem(response)                       # Add item to list
-                if listUpdated is True:
-                    writeFile()
-            print('Door is open, please close')                 # Warn user to close door on program start
->>>>>>> 44a58efaf8e8df590581e09b506fc3a1d4b2f19f
 
     except KeyboardInterrupt:
         # Write list values to files
