@@ -1,15 +1,18 @@
-# Include required modules
+# foodSense.py
+# DT08 - Food Sense
+# c. 2018 Derrick Patterson and Mavroidis Mavroidis. All rights reserved.
+
+
+##### Include required modules #####
+# Basic software modules
 import base64
 import csv
-import io
 import json
-import os
 import time
-import sys
 
 # Hardware specific modules
 import RPi.GPIO as GPIO
-import mcp3008 as MCP
+import mcp3008
 from picamera import PiCamera
 from scale import Scale
 
@@ -18,12 +21,16 @@ from google.oauth2 import service_account
 from googleapiclient import discovery
 
 
+<<<<<<< HEAD
+##### Method Implementations #####
+=======
 # Global variables for adding/removing items
 global listUpdated = False  # Flagged if item was added/removed
 global scaleLoad            # Current load on scale
 global itemList[]           # List of items
 
 
+>>>>>>> 44a58efaf8e8df590581e09b506fc3a1d4b2f19f
 # Authnticate with Google Vision API
 def authenticate():
     print('Authenticating with Google Vision API')
@@ -39,7 +46,7 @@ def authenticate():
 # Initialize MCP3004 ADC for temp sensor
 def initADC():
     print('Initializing ADC')
-    return MCP.MCP3008.fixed([mcp3008.CH0])
+    return mcp3008.MCP3008.fixed([mcp3008.CH0])
 
 
 # Initialize scale, reset and tare
@@ -62,31 +69,10 @@ def getTemp(adc):
     print('Reading temperature')
 
     value = adc()
-    print('Temperature: ' + str(value))
 
-
-# Use Pi Camera to capture an image; toggle LEDs
-def getImage():
-    filename = str(time.time())
-    filename += '.png'
-    #print(filename)
-    
-    print("Initializing camera")
-    camera = PiCamera()
-
-    # Turn on LEDs here
-
-    print("Starting camera preview")
-    camera.start_preview()
-    time.sleep(3)
-
-    camera.capture(filename)
-    camera.close()
-    print("Image captured")
-    
-    # Turn off LEDs here
-    
-    return filename
+    if value >= 30.0:
+        print('Temperature threshold exceded: ' + str(value))
+    else: print('Temperature: ' +str(value))
 
 
 # Record the current weight on the scale
@@ -118,6 +104,30 @@ def getWeight(scale):
     return itemRemoved
 
 
+# Use Pi Camera to capture an image; toggle LEDs
+def getImage():
+    filename = str(time.time())
+    filename += '.png'
+    #print(filename)
+    
+    print("Initializing camera")
+    camera = PiCamera()
+
+    # Turn on LEDs here
+
+    print("Starting camera preview")
+    camera.start_preview()
+    time.sleep(3)
+
+    camera.capture(filename)
+    camera.close()
+    print("Image captured")
+    
+    # Turn off LEDs here
+    
+    return filename
+
+
 # Send JSON request to Vision API
 def detect(service, filename):
     with open(filename, 'rb') as image:
@@ -147,7 +157,7 @@ def removeItem():
 
 
 # Parse the response JSON to match item and add to list
-def addItem(response):
+def addItem(itemListFile ,response, weight, filename):
     print('Adding item')
 
     match = False
@@ -171,8 +181,9 @@ def addItem(response):
     # If label anotations does not match, ask user for input
     print('Unable to get a good match. You can retry or manually input the item.')
 
-
-# Entrypoint
+    
+    
+# Main method
 def main():
     # Pin numbers
     DOOR = 27
@@ -181,23 +192,24 @@ def main():
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
  
-    # Open file streams for loading/saving item information
-    itemListFile = open('itemList.csv', 'r+')
-    itemList.append(itemListFile.read())
-
+    # Open file stream for loading/saving item information
+    itemListFile = open('itemList.csv')
+  
     # Begin initializing necessary components
-    service = authenticate()                                    # Authenticate with Vision API
     adc = initADC()                                             # Create/initialize ADC object for temperature sensor
     scale = initScale()                                         # Create/initialize HX711 object for scale
+
+    # Attempt to authenticate with Vision API
+    service = authenticate()
 
     # Main block of program
     try:
         while True:                                             # Loop until an execption is thrown
-            while GPIO.input(DOOR) is True:                     # Door is closed
+            while True:# GPIO.input(DOOR) is True:              # Door is closed
                 print("Door is closed")
                 time.sleep(1)
                 
-                if GPIO.input(DOOR) is False:                   # Door has been opened
+                if True:#GPIO.input(DOOR) is False:             # Door has been opened
                     print("Door was opened")
                     
                     while GPIO.input(DOOR) is False:            # Waiting for door to be closed again
@@ -205,6 +217,19 @@ def main():
                         time.sleep(1)          
                     print("Door was closed")
                     
+<<<<<<< HEAD
+                    weight = getWeight(scale)                   # Flagged if item was removed from fridge
+                    
+                    if weight > 0:
+                        filename = getImage()
+                        response = detect(service, filename)
+                        addItem(itemListFile, response, weight, filename)
+                    elif weight < 0:
+                        removeItem(itemListFile, weight)
+                    else: print('Error: weight is 0')
+
+            print('Door is open, please close')                 # Warn user that door must be closed on program init
+=======
                     itemRemoved = getWeight(scale)              # Flagged if item was removed from fridge
                     if itemRemoved is True:
                         removeItem()                            # Remove item from list
@@ -215,6 +240,7 @@ def main():
                 if listUpdated is True:
                     writeFile()
             print('Door is open, please close')                 # Warn user to close door on program start
+>>>>>>> 44a58efaf8e8df590581e09b506fc3a1d4b2f19f
 
     except KeyboardInterrupt:
         # Write list values to files
@@ -222,6 +248,7 @@ def main():
         sys.exit()
 
 
-# Call main
+##### Program entrypoint #####
+# Call main()
 if __name__ == '__main__':
     main()
