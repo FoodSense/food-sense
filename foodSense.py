@@ -20,7 +20,7 @@ from scale.scale import Scale
 # Google Authentication and API modules
 from google.oauth2 import service_account
 from googleapiclient import discovery
-
+from google.cloud import datastore
 
 ##### Method Implementations #####
 # Authnticate with Google Vision API
@@ -69,31 +69,23 @@ def getTemp(adc):
 
 # Record the current weight on the scale
 def getWeight(scale):
-    itemRemoved = False
+    print('Reading from scale')
     
-    # Will have to get prevWeight from db, using 0 for now
     prevWeight = 0
-    
-    currWeight = (scale.getMeasure()) / 13
+    weight = (scale.getMeasure()) / 13
     
     # Temporarily account for magnitude mismatch from ckt
     # Will need to be fixed later
-    if currWeight < 0:
-        currWeight = abs(currWeight)
-    print("Weight recorded: {0: 4.6f} g".format(currWeight))
-    print('')
+    if weight < 0:
+        weight = abs(weight)
+    print("Weight recorded: {0: 4.6f} g".format(weight))
 
     # Weight of new item is difference between current and previous weights
-    itemWeight = currWeight - prevWeight
-
-    # If an item is removed, weight difference will be negative
-    if itemWeight < 0:
-        itemWeight = abs(itemWeight)
-        itemRemoved = True
-        
-    scaleLoad = currWeight
-    weightList.append(itemWeight)
-    return itemRemoved
+    itemWeight = weight - prevWeight
+    
+    # Need to update what current weight is on scale
+    prevWeight = weight
+    return itemWeight
 
 
 # Use Pi Camera to capture an image; toggle LEDs
@@ -135,6 +127,8 @@ def getImage():
 
 # Send JSON request to Vision API
 def detect(service, filename):
+    print('Sending image to Vision API')
+    
     with open(filename, 'rb') as image:
         base64img = base64.b64encode(image.read())
         serviceRequest = service.images().annotate(body={
@@ -145,55 +139,51 @@ def detect(service, filename):
                 'features': [{
                     'type': 'LABEL_DETECTION',
                     'maxResults': 10
-                },
-                {
-                    'type': 'WEB_DETECTION',
-                    'maxResults': 10
-                }]
+                }#,
+                #{
+                #    'type': 'WEB_DETECTION',
+                #    'maxResults': 10
+                #}
+                ]
             }]
         })
-
     return serviceRequest.execute()
-
-
-# Remove item from list
-def removeItem():
-    print('Removing item')
 
 
 # Parse the response JSON to match item and add to list
 def parseRespsone(response):
     print('Adding item')
     
-    match = False
     itemNames = ['apple', 'banana', 'broccoli', 'celery', 'orange', 'onion', 'potato']
     itemDescriptors = ['fruit', 'vegitable', 'produce', 'organic', 'apple', 'banana', 'broccoli', 'celery', 'orange', 'potato']
     
-    #print(json.dumps(response, indent=4, sort_keys=True))
+    print(json.dumps(response, indent=4, sort_keys=True))
+    print('')
     
     # Search best guess label for item match
     #for i in range(len(itemNames)): 
     #    if itemNames[i] in response["responses"][0]['webDetection']['bestGuessLabels'][0]['label']:
     #        print('Match found: ' + itemNames[i])
 
-    for i in range(10):
-        print(response['responses'][0]['webDetection']['webEntities'][i]['description'])
+    responseLen = len(response['responses'][0]['labelAnnotations']) 
+    itemNamesLen = len(itemNames)
+    
+    # Search label annotations
+    for i in range(responseLen):
+        for j in range(itemNamesLen):
+            if itemNames[j] in response["responses"][0]['labelAnnotations'][i]['description']:
+                print('Label found: ' + itemNames[j])
+                match = itemNames[j]
+    return match
 
-    # Search web detection lables
-    #if match is False:
-    #    for i in range(10):
-    #        for j in range(len(itemNames)):
-    #            if itemNames[j] in response["responses"][0]['webDetection']['webEntities'][i]['description']:
-    #                print('Web Entity found: ' + itemNames[j])
-    #                match = True
-   
-   # Search label annotations
-    #if match is False:
-    #    for i in range(10):
-    #        for j in range(len(itemNames)):
-    #            if itemNames[j] in response["responses"][0]['labelAnnotations'][i]['description']:
-    #                print('Label found: ' + itemNames[j])
-    #                match = True
+
+def addItem(item):
+    print('Adding item')
+
+# Remove item from list
+def removeItem(weight):
+    print('Removing item')
+
 
 # Main method
 def main():
@@ -204,47 +194,42 @@ def main():
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
  
-    # Open file stream for loading/saving item information
-    #itemListFile = open('data/itemList.csv')
-  
     # Begin initializing necessary components
-    #adc = initADC()                                             # Create/initialize ADC object for temperature sensor
-    #scale = initScale()                                         # Create/initialize HX711 object for scale
+    adc = initADC()                                             # Create/initialize ADC object for temperature sensor
+    scale = initScale()                                         # Create/initialize HX711 object for scale
 
     # Attempt to authenticate with Vision API
     service = authenticate()
 
     # Main block of program
     try:
-        while True:         # Loop until an execption is thrown
+        while True:                                             # Loop until an execption is thrown
             while True:# GPIO.input(DOOR) is True:              # Door is closed
-                print("Door is closed")
+                print('Door is closed')
                 time.sleep(1)
                 
                 if True:#GPIO.input(DOOR) is False:             # Door has been opened
-                    print("Door was opened")
+                    print('Door was opened')
                     
                     while GPIO.input(DOOR) is False:            # Waiting for door to be closed again
-                        print("Waiting for door to close")
+                        print('Waiting for door to close')
                         time.sleep(1)          
-                    print("Door was closed")
+                    print('Door was closed')
                     
                     #weight = getWeight(scale)                   # Flagged if item was removed from fridge
                     weight = 50
                     if weight > 0:
                         #filename = getImage()
                         response = detect(service, 'samples/apple.jpg')
-                        parseRespsone(response)
+                        item = parseRespsone(response)
+                        addItem(item)
                     elif weight < 0:
-                        removeItem()
+                        removeItem(weight)
                     else:
                         print('Error: weight is 0')
-                    sys.exit()
-                    
-            print('Door is open, please close')                 # Warn user that door must be closed on program init
-
+                    sys.exit()                                   # Exit while loop (for debugging)
+            print('Door is open, please close')                  # Warn user that door must be closed on program init
     except KeyboardInterrupt:
-        # Write list values to files
         GPIO.cleanup()
         sys.exit()
 
