@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import statistics
-from hx711 import HX711
+from hx711.hx711 import HX711
 
 
 class Scale:

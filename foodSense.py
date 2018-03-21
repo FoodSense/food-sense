@@ -15,7 +15,7 @@ import time
 import RPi.GPIO as GPIO
 import mcp3008
 from picamera import PiCamera
-from scale import Scale
+from scale.scale import Scale
 
 # Google Authentication and API modules
 from google.oauth2 import service_account
