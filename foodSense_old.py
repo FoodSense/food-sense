@@ -2,20 +2,40 @@
 # DT08 - Food Sense
 # c. 2018 Derrick Patterson and Mavroidis Mavroidis. All rights reserved.
 
+##### Include required modules #####
+# Basic software modules
 import base64
 import csv
 import io
 import json
 import sys
 import time
+
+# Hardware specific modules
 import RPi.GPIO as GPIO
 import mcp3008
 from picamera import PiCamera
 from scale.scale import Scale
+
+# Google Authentication and API modules
+#from google.oauth2 import service_account
+#from googleapiclient import discovery
 from google.cloud import datastore
 from google.cloud import vision
 from google.cloud.vision import types
 
+
+##### Method Implementations #####
+# Authnticate with Google Vision API
+def authenticate():
+    print('Authenticating with Google Vision API')
+    
+    scopes = ['https://www.googleapis.com/auth/cloud-vision']
+    serviceAccount = '/home/pi/FoodSense-Service-Account.json'
+    
+    credentials = service_account.Credentials.from_service_account_file(
+        serviceAccount, scopes=scopes)
+    return discovery.build('vision', 'v1', credentials=credentials)
 
 # Initialize MCP3004 ADC for temp sensor
 def initADC():
@@ -107,9 +127,31 @@ def getImage():
         # Turn off LEDs here
     return filename
 
-def detectLabels(client, filename):
-    print('Detecting labels')
+# Send JSON request to Vision API
+def detect(service, filename):
+    print('Sending image to Vision API')
     
+    with open(filename, 'rb') as image:
+        base64img = base64.b64encode(image.read())
+        serviceRequest = service.images().annotate(body={
+            'requests': [{
+                'image': {
+                    'content': base64img.decode('UTF-8')
+                },
+                'features': [{
+                    'type': 'LABEL_DETECTION',
+                    'maxResults': 10
+                }#,
+                #{
+                #    'type': 'WEB_DETECTION',
+                #    'maxResults': 10
+                #}
+                ]
+            }]
+        })
+    return serviceRequest.execute()
+
+def detectLabels(client, filename):
     with io.open(filename, 'rb') as imageFile:
         content = imageFile.read()
     image = types.Image(content=content)
@@ -118,7 +160,7 @@ def detectLabels(client, filename):
 
 # Parse the response JSON to match item and add to list
 def parseRespsone(labels):
-    print('Searching for label match')
+    print('Adding item')
     
     itemNames = ['apple', 'banana', 'broccoli', 'celery', 'orange', 'onion', 'potato']
     
@@ -127,28 +169,48 @@ def parseRespsone(labels):
         for j in range(len(labels)):
             if itemNames[i] in labels[j].description:
                 item = labels[j].description
+            
+    #print(json.dumps(labels, indent=4, sort_keys=True))
+    #print('')
+    
+    # Search best guess label for item match
+    #for i in range(len(itemNames)): 
+    #    if itemNames[i] in response["responses"][0]['webDetection']['bestGuessLabels'][0]['label']:
+    #        print('Match found: ' + itemNames[i])
+
+    #responseLen = len(response['responses'][0]['labelAnnotations']) 
+    #itemNamesLen = len(itemNames)
+    
+    # Search label annotations
+    #for i in range(responseLen):
+    #    for j in range(itemNamesLen):
+    #        if itemNames[j] in response["responses"][0]['labelAnnotations'][i]['description']:
+    #            print('Label found: ' + itemNames[j])
+    #            match = itemNames[j]
     return item
 
-def addItem(client, item, weight, filename):
-    print('Adding item to list')
-    
-    kind = 'Contents'
-    name = item
+def addItem(item):
+    print('Adding item')
+
+# Remove item from list
+def removeItem(weight):
+    print('Removing item')
+
+def dataStore(client):
+    print('Datastore')
+
+    kind = 'Task'
+    name = 'sampletask1'
     task_key = client.key(kind, name)
 
     # Prepares the new entity
     task = datastore.Entity(key=task_key)
-    task['weight'] = weight
-    task['date/time'] = filename
+    task['description'] = 'Buy milk'
 
     # Saves the entity
     client.put(task)
-    print('Saved {}: {}, {}'.format(task.key.name, task['weight'], task['date/time']))
-
-# Remove item from list
-def removeItem(client, weight):
-    print('Removing item')
-
+    print('Saved {}: {}'.format(task.key.name, task['description']))
+    
 # Main method
 def main():
     # Pin numbers
@@ -162,6 +224,9 @@ def main():
     adc = initADC()                                             # Create/initialize ADC object for temperature sensor
     scale = initScale()                                         # Create/initialize HX711 object for scale
     visionClient, datastoreClient = initGCP()
+    
+    #Attempt to authenticate with Vision API
+    #service = authenticate()
 
     # Main block of program
     try:
@@ -182,12 +247,14 @@ def main():
                     weight = 50
                     if weight > 0:
                         #filename = getImage()
-                        filename = 'samples/apple.jpg'
-                        labels = detectLabels(visionClient, filename)
+                        #response = detect(service, 'samples/apple.jpg')
+                        labels = detectLabels(visionClient, 'samples/apple.jpg')
                         item = parseRespsone(labels)
-                        addItem(datastoreClient, item, weight, filename)
+                        print(item)
+                        #dataStore(datastoreClient)
+                        #addItem(item)
                     elif weight < 0:
-                        removeItem(datastoreClient, weight)
+                        removeItem(weight)
                     else:
                         print('Error: weight is 0')
                     sys.exit()                                   # Exit while loop (for debugging)
@@ -196,6 +263,7 @@ def main():
         GPIO.cleanup()
         sys.exit()
 
+##### Program entrypoint #####
 # Call main()
 if __name__ == '__main__':
     main()
