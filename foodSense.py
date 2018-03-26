@@ -2,44 +2,13 @@
 # DT08 - Food Sense
 # c. 2018 Derrick Patterson and Mavroidis Mavroidis. All rights reserved.
 
-import base64
-import csv
-import io
-import json
+from detect.detect import Detect
+from storage.storage import Storage
+from scale.scale import Scale
+import mcp3008 as ADC
+import RPi.GPIO as GPIO
 import sys
 import time
-import RPi.GPIO as GPIO
-import mcp3008
-from picamera import PiCamera
-from scale.scale import Scale
-from google.cloud import datastore
-from google.cloud import vision
-from google.cloud.vision import types
-
-
-# Initialize MCP3004 ADC for temp sensor
-def initADC():
-    print('Initializing ADC')
-    return mcp3008.MCP3008.fixed([mcp3008.CH0])
-
-# Initialize scale, reset and tare
-def initScale():
-    print('Initializing scale')
-    scale = Scale()
-    scale.setReferenceUnit(20)  # Originally 21
-    scale.reset()
-    scale.tare()                # Will need to decide how to handle this on system reset.
-                                # It may be a good idea to default to the last known weight
-                                # on the scale following a tare.
-                                # This creates a problem where the system will not know
-                                # if a user has added or removed anything in the meantime
-
-    return scale
-
-def initGCP():
-    print('Initializing and authenticating Cloud Platform clients')
-    
-    return vision.ImageAnnotatorClient(), datastore.Client()
 
 # Read temp sensor for current fridge temperature
 def getTemp(adc):
@@ -71,84 +40,6 @@ def getWeight(scale):
     prevWeight = weight
     return itemWeight
 
-# Use Pi Camera to capture an image; toggle LEDs
-def getImage():
-    filename = str(time.time())
-    filename += '.png'
-    print('File name: '.format(filename))
-    
-    with picamera.PiCamera() as camera:
-        # Camera settings
-        camera.sharpness = 0
-        camera.contrast = 0
-        camera.brightness = 50
-        camera.saturation = 0
-        camera.ISO = 0
-        camera.exposure_compensation = True
-        camera.exposure_mode = 'auto'
-        camera.awb_mode = 'auto'
-        camera.image_effect = 'none'
-        camera.color_effects = None
-        camera.rotation = 0
-        camera.hflip = False
-        camera.vflip = False
-        camera.crop = (0.0, 0.0, 1.0, 1.0)
-        
-        # Turn on LEDs here
-
-        # Begiin preview, pause for two seconds
-        camera.start_preview()
-        time.sleep(1.5)
-
-        # Capture image
-        camera.capture(filename)
-        print("Image captured")
-    
-        # Turn off LEDs here
-    return filename
-
-def detectLabels(client, filename):
-    print('Detecting labels')
-    
-    with io.open(filename, 'rb') as imageFile:
-        content = imageFile.read()
-    image = types.Image(content=content)
-    response = client.label_detection(image=image)
-    return response.label_annotations
-
-# Parse the response JSON to match item and add to list
-def parseRespsone(labels):
-    print('Searching for label match')
-    
-    itemNames = ['apple', 'banana', 'broccoli', 'celery', 'orange', 'onion', 'potato']
-    
-    # Find label that matches entry in itemNames
-    for i in range(len(itemNames)):
-        for j in range(len(labels)):
-            if itemNames[i] in labels[j].description:
-                item = labels[j].description
-    return item
-
-def addItem(client, item, weight, filename):
-    print('Adding item to list')
-    
-    kind = 'Contents'
-    name = item
-    task_key = client.key(kind, name)
-
-    # Prepares the new entity
-    task = datastore.Entity(key=task_key)
-    task['weight'] = weight
-    task['date/time'] = filename
-
-    # Saves the entity
-    client.put(task)
-    print('Saved {}: {}, {}'.format(task.key.name, task['weight'], task['date/time']))
-
-# Remove item from list
-def removeItem(client, weight):
-    print('Removing item')
-
 # Main method
 def main():
     # Pin numbers
@@ -159,9 +50,17 @@ def main():
     GPIO.setup(DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
  
     # Begin initializing necessary components
-    adc = initADC()                                             # Create/initialize ADC object for temperature sensor
-    scale = initScale()                                         # Create/initialize HX711 object for scale
-    visionClient, datastoreClient = initGCP()
+    adc = ADC.MCP3008.fixed([ADC.CH0])                # Create/initialize ADC object for temperature sensor
+    scale = Scale()                                   # Create/initialize HX711 object for scale
+    scale.setReferenceUnit(20)  # Originally 21
+    scale.reset()
+    scale.tare()                # Will need to decide how to handle this on system reset.
+                                # It may be a good idea to default to the last known weight
+                                # on the scale following a tare.
+                                # This creates a problem where the system will not know
+                                # if a user has added or removed anything in the meantime
+    detect = Detect()
+    storage = Storage()
 
     # Main block of program
     try:
@@ -175,19 +74,18 @@ def main():
                     
                     while GPIO.input(DOOR) is False:            # Waiting for door to be closed again
                         print('Waiting for door to close')
+                        # Start door timer
                         time.sleep(1)          
                     print('Door was closed')
                     
                     #weight = getWeight(scale)                   # Flagged if item was removed from fridge
-                    weight = 50
-                    if weight > 0:
-                        #filename = getImage()
-                        filename = 'samples/apple.jpg'
-                        labels = detectLabels(visionClient, filename)
-                        item = parseRespsone(labels)
-                        addItem(datastoreClient, item, weight, filename)
-                    elif weight < 0:
-                        removeItem(datastoreClient, weight)
+                    if detect.weight > 0:
+                        detect.getImage()
+                        detect.detectLabels()
+                        detect.parseRespsone()
+                        storage.addItem(item, weight, filename)
+                    elif detect.weight < 0:
+                        storage.removeItem(weight)
                     else:
                         print('Error: weight is 0')
                     sys.exit()                                   # Exit while loop (for debugging)
