@@ -5,7 +5,6 @@
 from detect.detect import Detect
 from storage.storage import Storage
 from scale.scale import Scale
-import mcp3008 as ADC
 import RPi.GPIO as GPIO
 import sys
 import time
@@ -20,76 +19,69 @@ def getTemp(adc):
         print('Temperature threshold exceded: ' + str(value))
     else: print('Temperature: ' +str(value))
 
-# Record the current weight on the scale
-def getWeight(scale):
-    print('Reading from scale')
-    
-    prevWeight = 0
-    weight = (scale.getMeasure()) / 13
-    
-    # Temporarily account for magnitude mismatch from ckt
-    # Will need to be fixed later
-    if weight < 0:
-        weight = abs(weight)
-    print("Weight recorded: {0: 4.6f} g".format(weight))
-
-    # Weight of new item is difference between current and previous weights
-    itemWeight = weight - prevWeight
-    
-    # Need to update what current weight is on scale
-    prevWeight = weight
-    return itemWeight
-
 # Main method
 def main():
-    # Pin numbers
-    DOOR = 27
+    print('Starting Food Sense')
+    
+    # GPIO pins
+    DATA = 22      # Data pin for HX711 ADC
+    DOOR = 27      # Door pin
+    LED = None     # LED pin
+    POWER = None   # Power monitoring pin
+    SCK = 17       # CLK pin for HX711 ADC
 
-    # Get up GPIO pins
+    # Set up GPIO pins
+    #try:
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
- 
+    #GPIO.setup(POWER, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    #GPIO.setup(LED, GPIO.OUT)
+    #except
+    #    print('Failed to setup GPIO pins')
+    #    sys.exit()
+        
     # Begin initializing necessary components
-    adc = ADC.MCP3008.fixed([ADC.CH0])                # Create/initialize ADC object for temperature sensor
-    scale = Scale()                                   # Create/initialize HX711 object for scale
-    scale.setReferenceUnit(20)  # Originally 21
-    scale.reset()
-    scale.tare()                # Will need to decide how to handle this on system reset.
-                                # It may be a good idea to default to the last known weight
-                                # on the scale following a tare.
-                                # This creates a problem where the system will not know
-                                # if a user has added or removed anything in the meantime
-    detect = Detect()
-    storage = Storage()
-
-    # Main block of program
+    try: 
+        detect = Detect()
+        monitor = Monitor()
+        scale = Scale(DATA, SCK)
+        storage = Storage()
+    except AttributeError:
+        print('Failed to initialize all system components')
+        sys.exit()
+        
+    # Main program loop
     try:
-        while True:                                             # Loop until an execption is thrown
-            while True:# GPIO.input(DOOR) is True:              # Door is closed
+        while True:#GPIO.input(POWER) is True:
+            while True:# GPIO.input(DOOR) is True:
                 print('Door is closed')
                 time.sleep(1)
                 
-                if True:#GPIO.input(DOOR) is False:             # Door has been opened
+                if True:#GPIO.input(DOOR) is False:  
                     print('Door was opened')
                     
-                    while GPIO.input(DOOR) is False:            # Waiting for door to be closed again
+                    while GPIO.input(DOOR) is False:  
                         print('Waiting for door to close')
                         # Start door timer
                         time.sleep(1)          
                     print('Door was closed')
                     
-                    #weight = getWeight(scale)                   # Flagged if item was removed from fridge
-                    if detect.weight > 0:
+                    #scale.getWeight()
+                    scale.weight = 50
+                    if scale.weight > 0:
                         detect.getImage()
                         detect.detectLabels()
                         detect.parseRespsone()
-                        storage.addItem(item, weight, filename)
-                    elif detect.weight < 0:
-                        storage.removeItem(weight)
+                        storage.addItem(detect.item, scale.weight, detect.filename)
+                    elif scale.weight < 0:
+                        storage.removeItem(scale.weight)
                     else:
                         print('Error: weight is 0')
-                    sys.exit()                                   # Exit while loop (for debugging)
-            print('Door is open, please close')                  # Warn user that door must be closed on program init
+                    sys.exit()     
+            print('Door is open, please close') 
+        print('Power failure')
+        sys.exit()
+        
     except KeyboardInterrupt:
         GPIO.cleanup()
         sys.exit()

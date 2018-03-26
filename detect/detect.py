@@ -8,10 +8,12 @@ class Detect:
     def __init__(self):
         print('Initializing Detect object')
         
-        self.client = vision.ImageAnnotatorClient()
-        self.itemNames = ['apple', 'banana', 'broccoli', 'celery', 'orange', 'onion', 'potato', 'tomato', 'soda', 'beer', 'milk', 'cheese']
+        self.__client = vision.ImageAnnotatorClient()
+        self.__itemNames = ['apple', 'banana', 'broccoli', 'celery',
+                            'orange', 'onion', 'potato', 'tomato',
+                            'soda', 'beer', 'milk', 'cheese']
+        self.__labels = None
         self.filename = None
-        self.labels = None
         self.item = None
 
     # Use Pi Camera to capture an image; toggle LEDs
@@ -56,7 +58,7 @@ class Detect:
             content = imageFile.read()
         image = types.Image(content=content)
         response = self.client.label_detection(image=image)
-        self.labels = response.label_annotations
+        self.__labels = response.label_annotations
 
     # Parse the response JSON to match item and add to list
     def parseRespsone(self):
@@ -66,7 +68,7 @@ class Detect:
         #    print(label.description)
                      
         # Find label that matches entry in itemNames
-        for i in range(len(itemNames)):
-            for j in range(len(self.labels)):
-                if itemNames[i] == self.labels[j].description:
-                    self.item = self.labels[j].description
+        for i in range(len(self.__itemNames)):
+            for j in range(len(self.__labels)):
+                if self.__itemNames[i] == self.__labels[j].description:
+                    self.item = self.__labels[j].description
