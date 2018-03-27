@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import mcp3008
 import time
 
-class System:
+class Monitor:
     def __init__(self, DOOR, POWER):
         print('Initializing System Monitoring object')
                 
