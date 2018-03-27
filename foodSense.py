@@ -7,7 +7,6 @@ from scale.scale import Scale
 from storage.storage import Storage
 from system.system import System
 import sys
-import time
 
 # Main method
 def main():
@@ -18,10 +17,9 @@ def main():
     DOOR = 27       # Door monitoring pin
     LED = 5         # LED power pin
     POWER = 26      # Power monitoring pin
-    maxOpen = 120   # Max amount of time (in seconds) for door to remain open
-    maxTemp = 4.4   # Max temperature in Celcius
 
     # Begin initializing necessary components
+    print('Initializing system components')
     try:
         system = System(DOOR, POWER)  # System monitoring
         scale = Scale(DATA, CLK)      # HX711 for reading scale    
@@ -35,21 +33,20 @@ def main():
     # Main program loop
     while system.powerOn():
         while system.doorClosed():
-
             if system.checkTemp():
                 system.tempWarning()
-
+            
             if system.doorOpen():
                 system.startTimer()
-                while system.doorOpen():  
-
+                
+                while system.doorOpen():      
+                    if system.timerExceeded():
+                        system.doorWarning()
+                
                     if system.checkTemp():
                         system.tempWarning()
 
-                    if system.timerExceeded():
-                        system.doorWarning()
                 scale.getWeight()
-                
                 if scale.weight > 0:
                     detect.getImage()
                     detect.detectLabels()

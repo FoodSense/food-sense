@@ -1,11 +1,12 @@
 from google.cloud import vision
 from google.cloud.vision import types
 from picamera import PiCamera
+import RPi.GPIO as GPIO
 import io
 #import json
 
 class Detect:
-    def __init__(self):
+    def __init__(self, LED):
         print('Initializing Detect object')
         
         self.__client = vision.ImageAnnotatorClient()
@@ -13,17 +14,21 @@ class Detect:
                             'orange', 'onion', 'potato', 'tomato',
                             'soda', 'beer', 'milk', 'cheese']
         self.__labels = None
+        self.__LED = LED
         self.filename = None
         self.item = None
 
+        # Set up LED pin
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.__LED, GPIO.OUT)
+
     # Use Pi Camera to capture an image; toggle LEDs
-    def getImage():
+    def getImage(self):
         print('Capturing image')
-        
-        filename = 'data/images/' + str(time.time()) + '.png'
-        
+        self.filename = 'data/images/' + str(time.time()) + '.png'
+
+        # Camera init and settings
         with PiCamera.PiCamera() as camera:
-            # Camera settings
             camera.sharpness = 0
             camera.contrast = 0
             camera.brightness = 50

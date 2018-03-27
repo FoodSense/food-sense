@@ -6,19 +6,18 @@ class System:
     def __init__(self, DOOR, POWER):
         print('Initializing System Monitoring object')
                 
-        # GPIO pins
         self.__DOOR = DOOR
         self.__POWER = POWER
+        self.__maxTemp = 4.4
+        self.__time = None
 
         # Setup GPIO
         GPIO.setmode(GPIO.BCM)
-    	GPIO.setup(__DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    	GPIO.setup(__POWER, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    	GPIO.setup(self.__DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+    	GPIO.setup(self.__POWER, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
         # Initialize MCP3004 ADC object
         self.__adc = mcp3008.MCP3008.fixed([mcp3008.CH0])
-        self.__maxTemp = 4.4
-        self.__time = None
 
     # Return value from temp sensor adc
     def checkTemp(self):
@@ -43,6 +42,7 @@ class System:
     # Warn that door was left open
     def doorWarning(self):
         print('Door warning')
+        time.sleep(1)
 
     # Return value of power pin
     def powerOn(self):
@@ -52,6 +52,7 @@ class System:
     # Warn that power has failed
     def powerWarning(self):
         print('Power warning')
+        time.sleep(1)
 
     # Get system time
     def startTimer(self):
@@ -61,6 +62,7 @@ class System:
     # Warn that temp has exceeded limit
     def tempWarning(self):
         print('Temperature warning')
+        time.sleep(1)
 
     # Check if timer has been exceeded
     def timerExceeded(self):

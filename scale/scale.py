@@ -10,5 +10,3 @@ class Scale:
     # Record the current weight on the scale
     def getWeight(self):
         print('Reading scale')
-        
-        
