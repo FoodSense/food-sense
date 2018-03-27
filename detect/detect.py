@@ -2,7 +2,7 @@ from google.cloud import vision
 from google.cloud.vision import types
 from picamera import PiCamera
 import io
-import json
+#import json
 
 class Detect:
     def __init__(self):
