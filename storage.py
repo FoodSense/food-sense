@@ -1,32 +1,45 @@
-from google.cloud import datastore
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import db
 
 class Storage:
     def __init__(self):
-        print('Initializing storage object')
+        print('Initializing Storage object')
         
-        self.client = datastore.Client()
-        
-    # Add item to Datastore
-    def addItem(self, item, weight, filename):
+        # Authenticate using Firebase AdminSDK service account
+        self.__cred = credentials.Certificate('/home/pi/FoodSense-Firebase.json')
+        firebase_admin.initialize_app(self.__cred, {
+            'databaseURL': 'https://foodsense-194320.firebaseio.com/'
+        })
+
+    # Add new item to Firebase
+    def addItem(self, item, weight, timestamp):
         print('Adding item to list')
-        
-        kind = 'Contents'
-        name = item
-        task_key = self.client.key(kind, name)
 
-        # Prepares the new entity
-        task = datastore.Entity(key=task_key)
-        task['weight'] = weight
-        task['date/time'] = filename
+        ref = db.reference('Contents')
+        ref.set({
+            item: {
+                'weight': weight,
+                'timestamp': timestamp
+            }
+        })
 
-        # Saves the entity
-        self.client.put(task)
-        print('Saved {}: {}, {}'.format(task.key.name, task['weight'], task['date/time']))
-
-    # Remove item from Datastore
+    # Remove item from Firebase
     def removeItem(self, weight):
         print('Removing item')
-
-    # Search Datastore for item
-    def searchList(self, item, weight):
+        
+    # Search Firebase for item
+    def searchList(self, item):
         print('Searching for item')
+
+        ref = db.reference('Contents')
+        snapshot = ref.get()
+        if item in snapshot:
+            print(item)
+
+    # Print list
+    def printList(self):
+        print('Printing list')
+
+        ref = db.reference('Contents')
+        print(ref.get())

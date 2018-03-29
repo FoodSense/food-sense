@@ -16,7 +16,7 @@ class Detect:
         
         # Cloud Vision authentication
         self.__scopes = ['https://www.googleapis.com/auth/cloud-vision']
-        self.__serviceAccount = '/home/pi/FoodSense-Service-Account.json'
+        self.__serviceAccount = '/home/pi/FoodSense-GoogleCloud.json'
         
         self.__credentials = service_account.Credentials.from_service_account_file(
             self.__serviceAccount, scopes=self.__scopes)
@@ -27,11 +27,12 @@ class Detect:
                             'orange', 'onion', 'potato', 'tomato',
                             'soda', 'beer', 'milk', 'cheese']
         self.__LED = LED
+        self.__filename = None
         self.__match = False
         self.__response = None
         
         # Public class members
-        self.filename = None
+        self.timestamp = None
         self.item = None
 
         # Set up LED pin
@@ -41,7 +42,8 @@ class Detect:
     # Use Pi Camera to capture an image; toggle LEDs
     def getImage(self):
         print('Capturing image')
-        self.filename = 'data/images/' + str(time.time()) + '.png'
+        self.timestamp = time.time()
+        self.__filename = 'data/images/' + str(timestamp) + '.png'
 
         # Camera init and settings
         with PiCamera.PiCamera() as camera:
@@ -101,11 +103,11 @@ class Detect:
         #print(json.dumps(self.__response, indent=4, sort_keys=True))
         #print('')
 
-        for i in range(5):
-            print(self.__response['responses'][0]['labelAnnotations'][i]['description'])
-            print('')
-            print(self.__response['responses'][0]['webDetection']['webEntities'][i]['description'])
-            print('')
+        #for i in range(5):
+        #    print(self.__response['responses'][0]['labelAnnotations'][i]['description'])
+        #    print('')
+        #    print(self.__response['responses'][0]['webDetection']['webEntities'][i]['description'])
+        #    print('')
 
         # Find match in label annotations
         for i in range(len(self.__response['responses'][0]['labelAnnotations'])):
@@ -133,5 +135,4 @@ class Detect:
 
         # Last resort: ask user for input
         if self.__match is False:
-            self.item = 'Null'
-            	
+            self.item = 'Null'	

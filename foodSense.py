@@ -48,14 +48,14 @@ def main():
 		#scale.getWeight()                    # Get weight on scale
                 scale.weight = 50
                 if scale.weight > 0:                 # If item was placed on scale
-            	    #detect.getImage()                # Take picture of item
-                    detect.filename = 'data/samples/milk.jpg'
-                    detect.detectItem()            # Send image to Vision API
-                    detect.parseResponse()           # Match response with list of known items
-                    storage.addItem(                 # Add item info to list
-                        detect.item,
-                        scale.weight,
-                        detect.filename)
+            	    #detect.getImage()               # Take picture of item
+                    #detect.detectItem()              # Send image to Vision API
+                    #detect.parseResponse()           # Match response with list of known items
+                    #storage.addItem(                 # Add item info to list
+                    #    detect.item,
+                    #    scale.weight,
+                    #    detect.filename)
+                    storage.searchList('apple')
                 elif scale.weight < 0:
                     storage.removeItem(scale.weight) # Find it in datastore and remove
                 else:
