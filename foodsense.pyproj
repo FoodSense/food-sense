@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{b90173bb-037e-4ee6-a4d4-7e21136eb399}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>detect.py</StartupFile>
+    <SearchPath />
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId>Global|PythonCore|3.6</InterpreterId>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="detect.py" />
+    <Compile Include="foodSense.py" />
+    <Compile Include="monitor.py" />
+    <Compile Include="old\foodSense_customJSON.py" />
+    <Compile Include="old\foodSense_NO-OOP.py" />
+    <Compile Include="old\scale\hx711\hx711.py" />
+    <Compile Include="old\scale\scale.py" />
+    <Compile Include="scale.py" />
+    <Compile Include="storage.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="data\samples\apple.jpg" />
+    <Content Include="data\samples\apple_banana.jpg" />
+    <Content Include="data\samples\apple_banana_orange.jpg" />
+    <Content Include="data\samples\apple_onion_potato.jpg" />
+    <Content Include="data\samples\apple_potato.jpg" />
+    <Content Include="data\samples\banana.jpg" />
+    <Content Include="data\samples\broccoli.jpg" />
+    <Content Include="data\samples\celery.jpg" />
+    <Content Include="data\samples\orange.jpg" />
+    <Content Include="data\samples\potato.jpg" />
+    <Content Include="data\samples\produce.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="data\samples" />
+    <Folder Include="old" />
+    <Folder Include="old\scale" />
+    <Folder Include="old\scale\hx711" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.6" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>

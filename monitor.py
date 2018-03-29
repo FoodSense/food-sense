@@ -1,5 +1,6 @@
 import RPi.GPIO as GPIO
 import mcp3008
+import sys
 import time
 
 class Monitor:
@@ -52,7 +53,7 @@ class Monitor:
     # Warn that power has failed
     def powerWarning(self):
         print('Power warning')
-        time.sleep(1)
+        sys.exit()
 
     # Get system time
     def startTimer(self):

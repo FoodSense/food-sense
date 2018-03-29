@@ -27,40 +27,43 @@ def main():
         storage = Storage()             # Cloud Datastore interface
 
     except AttributeError:
-        print('Failed to initialize all monitor components')
+        print('Failed to initialize all system components')
         sys.exit()
         
     # Main program loop
-    while monitor.powerOn():
-        while monitor.doorClosed():
-            if monitor.checkTemp():
+    while monitor.powerOn():                         # Loops while main power is on
+        while monitor.doorClosed():                  # Loops while door is closed
+            if monitor.checkTemp():                  # Check temperature
                 monitor.tempWarning()
             
-            if monitor.doorOpen():
-                monitor.startTimer()
+            if monitor.doorOpen():                   # If door is opened
+                monitor.startTimer()                 # Start door timer
                 
-                while monitor.doorOpen():      
-                    if monitor.timerExceeded():
+                while monitor.doorOpen():            # Loop while door remains open
+                    if monitor.timerExceeded():      # Issue warning if timer exceeded
                         monitor.doorWarning()
                 
-                    if monitor.checkTemp():
+                    if monitor.checkTemp():          # Continue checking temp since door is open
                         monitor.tempWarning()
 
-                scale.getWeight()
-                if scale.weight > 0:
-                    detect.getImage()
-                    detect.detectLabels()
-                    detect.parseRespsone()
-                    storage.addItem(detect.item, scale.weight, detect.filename)
-                elif scale.weight < 0:
-                    storage.removeItem(scale.weight)
+                scale.getWeight()                    # Get weight on scale
+                if scale.weight > 0:                 # If item was placed on scale
+                    detect.getImage()                # Take picture of item
+                    detect.detectLabels()            # Send image to Vision API
+                    detect.parseRespsone()           # Match response with list of known items
+                    storage.addItem(                 # Add item info to list
+                        detect.item,
+                        scale.weight,
+                        detect.filename)
+                elif scale.weight < 0:               # If item was removed
+                    storage.removeItem(scale.weight) # Find it in datastore and remove
                 else:
-                    print('Error: no weight detected on scale')
+                    pass                             # No item placed on scale
             else:
-                pass     
+                pass                                 # Continue looping if door remains closed     
         print('Door must be closed on monitor start') 
-    monitor.powerWarning()
-    sys.exit()
+    else:
+        monitor.powerWarning()                       # Issue power warning if power fails
 
 # Call main()
 if __name__ == '__main__':
