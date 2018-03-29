@@ -28,18 +28,35 @@ class Storage:
     def removeItem(self, weight):
         print('Removing item')
         
+        ref = db.reference('Contents')
+        snapshot = ref.get()
+
+        for key, value in snapshot.items():
+            item = key
+            val = value
+            for key, value in val.items():
+                if weight == value:
+        toRemove = ref.child(item)
+        toRemove.delete()
+
     # Search Firebase for item
     def searchList(self, item):
-        print('Searching for item')
+        print('Searching for ' + item)
 
         ref = db.reference('Contents')
         snapshot = ref.get()
+                
         if item in snapshot:
-            print(item)
+            print(item + 'found')
+        else:
+            print(item + 'not found')
 
     # Print list
     def printList(self):
         print('Printing list')
 
         ref = db.reference('Contents')
-        print(ref.get())
+        snapshot = ref.get()
+        
+        for key,value in snapshot.items():
+            print('Item: ' + key)
