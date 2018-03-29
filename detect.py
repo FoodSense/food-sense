@@ -16,7 +16,7 @@ class Detect:
         
         # Cloud Vision authentication
         self.__scopes = ['https://www.googleapis.com/auth/cloud-vision']
-        self.__serviceAccount = '/home/pi/FoodSense-Service-Account.json'
+        self.__serviceAccount = '/home/pi/FoodSense-GoogleCloud.json'
         
         self.__credentials = service_account.Credentials.from_service_account_file(
             self.__serviceAccount, scopes=self.__scopes)
