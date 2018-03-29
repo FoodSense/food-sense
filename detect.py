@@ -27,7 +27,7 @@ class Detect:
                             'orange', 'onion', 'potato', 'tomato',
                             'soda', 'beer', 'milk', 'cheese']
         self.__LED = LED
-        self.__filename = None
+        self.filename = None
         self.__match = False
         self.__response = None
         
