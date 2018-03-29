@@ -13,9 +13,9 @@ class Monitor:
         self.__time = None
 
         # Setup GPIO
-        GPIO.setmode(GPIO.BCM)
-    	GPIO.setup(self.__DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    	GPIO.setup(self.__POWER, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        #GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.__DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        GPIO.setup(self.__POWER, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
         # Initialize MCP3004 ADC object
         self.__adc = mcp3008.MCP3008.fixed([mcp3008.CH0])

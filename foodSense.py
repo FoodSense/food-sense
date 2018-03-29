@@ -6,6 +6,7 @@ from detect import Detect
 from scale import Scale
 from storage import Storage
 from monitor import Monitor
+import RPi.GPIO as GPIO
 import sys
 
 # Main method
@@ -17,6 +18,7 @@ def main():
     DOOR = 27       # Door monitoring pin
     LED = 5         # LED power pin
     POWER = 26      # Power monitoring pin
+    GPIO.setmode(GPIO.BCM)
 
     # Begin initializing necessary components
     print('Initializing monitor components')
@@ -31,37 +33,38 @@ def main():
         sys.exit()
         
     # Main program loop
-    while monitor.powerOn():                         # Loops while main power is on
-        while monitor.doorClosed():                  # Loops while door is closed
-            if monitor.checkTemp():                  # Check temperature
-                monitor.tempWarning()
+    while True:# monitor.powerOn():                         # Loops while main power is on
+        while True:#monitor.doorClosed():                  # Loops while door is closed
+            #if monitor.checkTemp():                  # Check temperature
+            #    monitor.tempWarning()
             
-            if monitor.doorOpen():                   # If door is opened
-                monitor.startTimer()                 # Start door timer
-                
-                while monitor.doorOpen():            # Loop while door remains open
-                    if monitor.timerExceeded():      # Issue warning if timer exceeded
-                        monitor.doorWarning()
-                
-                    if monitor.checkTemp():          # Continue checking temp since door is open
-                        monitor.tempWarning()
-
-                scale.getWeight()                    # Get weight on scale
+            if True:#monitor.doorOpen():                   # If door is opened
+                #monitor.startTimer()                 # Start door timer
+                #while monitor.doorOpen():            # Loop while door remains open
+                    #if monitor.timerExceeded():      # Issue warning if timer exceeded
+                    #    monitor.doorWarning()
+                    #if monitor.checkTemp():          # Continue checking temp since door is open
+                    #    monitor.tempWarning()
+		#scale.getWeight()                    # Get weight on scale
+                scale.weight = 50
                 if scale.weight > 0:                 # If item was placed on scale
-                    detect.getImage()                # Take picture of item
-                    detect.detectLabels()            # Send image to Vision API
-                    detect.parseRespsone()           # Match response with list of known items
+            	    #detect.getImage()                # Take picture of item
+                    detect.filename = 'data/samples/milk.jpg'
+                    detect.detectItem()            # Send image to Vision API
+                    detect.parseResponse()           # Match response with list of known items
                     storage.addItem(                 # Add item info to list
                         detect.item,
                         scale.weight,
                         detect.filename)
-                elif scale.weight < 0:               # If item was removed
+                elif scale.weight < 0:
                     storage.removeItem(scale.weight) # Find it in datastore and remove
                 else:
                     pass                             # No item placed on scale
+                sys.exit()
             else:
-                pass                                 # Continue looping if door remains closed     
-        print('Door must be closed on monitor start') 
+                pass
+        else:
+            print('Door must be closed on monitor start') 
     else:
         monitor.powerWarning()                       # Issue power warning if power fails
 
