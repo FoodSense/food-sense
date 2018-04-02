@@ -13,7 +13,7 @@ class Monitor:
         self.time = None
 
         # Setup GPIO
-        #GPIO.setmode(GPIO.BCM)
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup(self.DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
         GPIO.setup(self.POWER, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 

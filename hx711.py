@@ -56,7 +56,7 @@ class HX711(object):
                             + str(dout_pin) + \
                             ' and pd_sck_pin: ' + str(pd_sck_pin) + '\n')
 
-        #GPIO.setmode(GPIO.BCM)  # set GPIO pin mode to BCM numbering
+        GPIO.setmode(GPIO.BCM)  # set GPIO pin mode to BCM numbering
         GPIO.setwarnings(False)
         GPIO.setup(self._pd_sck, GPIO.OUT)  # pin _pd_sck is output only
         GPIO.setup(self._dout, GPIO.IN)  # pin _dout is input only

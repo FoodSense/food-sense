@@ -6,68 +6,66 @@ from detect import Detect
 from monitor import Monitor
 from scale import Scale
 from storage import Storage
-import RPi.GPIO as GPIO
 import sys
 import time
 
 # Main method
 def main():
     print('Starting Food Sense')
-    
-    CLK = 17        # HX711 clk pin
-    DATA = 22       # HX711 data pin
-    DOOR = 27       # Door monitoring pin
-    LED = 5         # LED power pin
-    POWER = 26      # Power monitoring pin
-    GPIO.setmode(GPIO.BCM)
+
+    CLK = 17
+    DATA = 22
+    DOOR = 27
+    LED = 5
+    POWER = 26
 
     # Begin initializing necessary components
     print('Initializing system components')
     try:
-        #monitor = Monitor(DOOR, POWER)  # System monitoring
-        scale = Scale(DATA, CLK)        # HX711 for reading scale    
-        detect = Detect(LED)            # Camera, Vision API, and parsing
-        storage = Storage()               # storage interface
+        monitor = Monitor(DOOR, POWER)
+        scale = Scale(DATA, CLK)
+        detect = Detect(LED)
+        storage = Storage()
     except AttributeError:
         print('Failed to initialize all system components')
         sys.exit()
-        
+
     # Main program loop
-    while True:# monitor.powerOn():                         # Loops while main power is on
-        while True:#monitor.doorClosed():                  # Loops while door is closed
-            #if monitor.checkTemp():                  # Check temperature
-            #    monitor.tempWarning()
-            if True:#monitor.doorOpen():                   # If door is opened
-                #monitor.startTimer()                 # Start door timer
-                #while monitor.doorOpen():            # Loop while door remains open
-                    #if monitor.timerExceeded():      # Issue warning if timer exceeded
-                    #    monitor.doorWarning()
-                    #if monitor.checkTemp():          # Continue checking temp since door is open
-                    #    monitor.tempWarning()
-                #scale.getWeight()                    # Get weight on scale
-                scale.weight = 50
-                if scale.weight > 0:                  # If item was placed on scale
-                    #detect.getImage()
-                    detect.filename = 'data/images/test.png'
-                    #detect.timestamp = 'test'
-                    #detect.detectItem()
-                    #detect.parseResponse()
-                    #storage.addItem(
-                    #       detect.item,
-                    #       scale.weight, 
-                    #       detect.timestamp)
-                    storage.uploadImage(detect.filename)
-                elif scale.weight < 0:
-                    storage.removeItem(scale.weight) # Find it in datastore and remove
+    while True:
+        while monitor.powerOn():
+            while monitor.doorClosed():
+                if monitor.checkTemp():
+                    monitor.tempWarning()
+                if monitor.doorOpen():
+                    monitor.startTimer()
+                    while monitor.doorOpen():
+                        if monitor.timerExceeded():
+                            monitor.doorWarning()
+                        if monitor.checkTemp():
+                            monitor.tempWarning()
+                    scale.getWeight()
+                    if scale.weight > 0:
+                        detect.getImage()
+                        detect.detectItem()
+                        detect.parseResponse()
+                        storage.addItem(
+                                detect.item,
+                                scale.weight, 
+                                detect.timestamp)
+                        storage.uploadImage(detect.filename)
+                    elif scale.weight < 0:
+                        storage.removeItem(scale.weight) 
+                    else:
+                        pass
+                    sys.exit()
                 else:
-                    pass                             # No item placed on scale
-                sys.exit()
+                    pass
             else:
-                pass
+                print('Door must be closed on monitor start')
         else:
-            print('Door must be closed on monitor start') 
+            monitor.powerWarning()
     else:
-        monitor.powerWarning()                       # Issue power warning if power fails
+        pass
 
 # Call main()
 if __name__ == '__main__':
