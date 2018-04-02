@@ -24,11 +24,10 @@ def main():
     # Begin initializing necessary components
     print('Initializing system components')
     try:
-        monitor = Monitor(DOOR, POWER)  # System monitoring
+        #monitor = Monitor(DOOR, POWER)  # System monitoring
         scale = Scale(DATA, CLK)        # HX711 for reading scale    
         detect = Detect(LED)            # Camera, Vision API, and parsing
         storage = Storage()               # storage interface
-
     except AttributeError:
         print('Failed to initialize all system components')
         sys.exit()
@@ -38,7 +37,6 @@ def main():
         while True:#monitor.doorClosed():                  # Loops while door is closed
             #if monitor.checkTemp():                  # Check temperature
             #    monitor.tempWarning()
-            
             if True:#monitor.doorOpen():                   # If door is opened
                 #monitor.startTimer()                 # Start door timer
                 #while monitor.doorOpen():            # Loop while door remains open
@@ -46,33 +44,19 @@ def main():
                     #    monitor.doorWarning()
                     #if monitor.checkTemp():          # Continue checking temp since door is open
                     #    monitor.tempWarning()
-		#scale.getWeight()                    # Get weight on scale
+                #scale.getWeight()                    # Get weight on scale
                 scale.weight = 50
-                if scale.weight > 0:                 # If item was placed on scale
-            	    #detect.getImage()               # Take picture of item
-                    #detect.detectItem()              # Send image to Vision API
-                    #detect.parseResponse()           # Match response with list of known items
-                    
-                    storage.addItem(
-                        'apple',
-                        75,
-                        str(time.time()))
-                    storage.addItem(
-                        'orange',
-                        62,
-                        str(time.time()))
-                    storage.addItem(
-                        'potato',
-                        102,
-                        str(time.time()))
-                    storage.addItem(
-                        'celery',
-                        96,
-                        str(time.time()))
-                    
-                    storage.printList()
-                    #storage.uploadImage()
-                
+                if scale.weight > 0:                  # If item was placed on scale
+                    #detect.getImage()
+                    detect.filename = 'data/images/test.png'
+                    #detect.timestamp = 'test'
+                    #detect.detectItem()
+                    #detect.parseResponse()
+                    #storage.addItem(
+                    #       detect.item,
+                    #       scale.weight, 
+                    #       detect.timestamp)
+                    storage.uploadImage(detect.filename)
                 elif scale.weight < 0:
                     storage.removeItem(scale.weight) # Find it in datastore and remove
                 else:

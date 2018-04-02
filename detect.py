@@ -6,6 +6,8 @@ import base64
 import io
 import json
 import logging
+import time
+import sys
 
 class Detect:
     def __init__(self, LED):
@@ -23,7 +25,7 @@ class Detect:
         self.client = discovery.build('vision', 'v1', credentials=self.credentials)
         
         # Private class members
-        self.itemNames = ['apple', 'banana', 'broccoli', 'celery',
+        self.itemNames = ['granny smith', 'apple', 'banana', 'broccoli', 'celery',
                             'orange', 'onion', 'potato', 'tomato',
                             'soda', 'beer', 'milk', 'cheese']
         self.LED = LED
@@ -43,10 +45,10 @@ class Detect:
     def getImage(self):
         print('Capturing image')
         self.timestamp = time.time()
-        self.filename = 'data/images/' + str(timestamp) + '.png'
+        self.filename = 'data/images/' + str(self.timestamp) + '.png'
 
         # Camera init and settings
-        with PiCamera.PiCamera() as camera:
+        with PiCamera() as camera:
             camera.sharpness = 0
             camera.contrast = 0
             camera.brightness = 50
@@ -69,7 +71,7 @@ class Detect:
             time.sleep(1.5)
 
             # Capture image
-            camera.capture(filename)
+            camera.capture(self.filename)
         
             # Turn off LEDs here
 
@@ -100,8 +102,8 @@ class Detect:
     def parseResponse(self):
         print('Searching for item match')
 
-        #print(json.dumps(self.response, indent=4, sort_keys=True))
-        #print('')
+        print(json.dumps(self.response, indent=4, sort_keys=True))
+        print('')
 
         #for i in range(5):
         #    print(self.response['responses'][0]['labelAnnotations'][i]['description'])
@@ -124,7 +126,6 @@ class Detect:
                         self.match = True
                         self.item = self.response["responses"][0]['webDetection']['webentities'][i]['description']
 
-
         # If no match still found, try logo detection
         #if self.match is False:
         #    for i in range(len(self.response['responses'][0]['logoAnnotations'])):
@@ -133,6 +134,8 @@ class Detect:
         #                self.match = True
         #                self.item = self.response["responses"][0]['logoAnnotations'][i]['description']
 
-        # Last resort: ask user for input
         if self.match is False:
-            self.item = 'Null'	
+            print('No item found')
+            sys.exit()
+        else:
+            print('Item found: '.format(self.item))
