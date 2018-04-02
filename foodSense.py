@@ -8,6 +8,7 @@ from scale import Scale
 from storage import Storage
 import RPi.GPIO as GPIO
 import sys
+import time
 
 # Main method
 def main():
@@ -49,16 +50,29 @@ def main():
                 scale.weight = 50
                 if scale.weight > 0:                 # If item was placed on scale
             	    #detect.getImage()               # Take picture of item
-                    detect.timestamp=12345
-                    detect.filename='data/samples/apple.jpg'
-                    detect.detectItem()              # Send image to Vision API
-                    detect.parseResponse()           # Match response with list of known items
-                    #storage.addItem(                 # Add item info to list
-                    #    detect.item,
-                    #    scale.weight,
-                    #    detect.timestamp)
-                    #storage.printList()
+                    #detect.detectItem()              # Send image to Vision API
+                    #detect.parseResponse()           # Match response with list of known items
+                    
+                    storage.addItem(
+                        'apple',
+                        75,
+                        str(time.time()))
+                    storage.addItem(
+                        'orange',
+                        62,
+                        str(time.time()))
+                    storage.addItem(
+                        'potato',
+                        102,
+                        str(time.time()))
+                    storage.addItem(
+                        'celery',
+                        96,
+                        str(time.time()))
+                    
+                    storage.printList()
                     #storage.uploadImage()
+                
                 elif scale.weight < 0:
                     storage.removeItem(scale.weight) # Find it in datastore and remove
                 else:

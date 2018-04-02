@@ -5,10 +5,10 @@ from firebase_admin import firestore
 class Storage:
     # Initialize object
     def __init__(self):
-        print('Initializing Firestore object')
+        print('Initializing Storage object')
         
         # Authenticate using Firebase AdminSDK service account
-        self.cred = credentials.Certificate('foodSense-firebase.json')
+        self.cred = credentials.Certificate('/home/pi/foodsense-firebase.json')
         firebase_admin.initialize_app(self.cred)
         self.db = firestore.client()
 
@@ -17,16 +17,17 @@ class Storage:
         self.docs = self.db.collection(u'List').get()
         for doc in self.docs:
             self.count += 1
+        print('Number of item currnetly in list: ' + str(self.count))
 
     # Add new item to Firebase
     def addItem(self, item, weight, timestamp):
         print('Adding {} to list'.format(item))
 
         # Create unique key for item
-        key = 'Item ' + str(self.count)
+        key = timestamp
         
         # Data fields for key
-        data = { u'name': item, u'weight': weight, u'timestamp': timestamp }
+        data = { u'name': item, u'weight': weight }
         self.count += 1
         
         # Push 'key: {data}' to 'List' collection

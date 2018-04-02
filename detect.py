@@ -15,21 +15,21 @@ class Detect:
         logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
         
         # Cloud Vision authentication
-        self.__scopes = ['https://www.googleapis.com/auth/cloud-vision']
-        self.__serviceAccount = '/home/pi/foodsense-gcloud.json'
+        self.scopes = ['https://www.googleapis.com/auth/cloud-vision']
+        self.serviceAccount = '/home/pi/foodsense-gcloud.json'
         
-        self.__credentials = service_account.Credentials.from_service_account_file(
-            self.__serviceAccount, scopes=self.__scopes)
-        self.__client = discovery.build('vision', 'v1', credentials=self.__credentials)
+        self.credentials = service_account.Credentials.from_service_account_file(
+            self.serviceAccount, scopes=self.scopes)
+        self.client = discovery.build('vision', 'v1', credentials=self.credentials)
         
         # Private class members
-        self.__itemNames = ['apple', 'banana', 'broccoli', 'celery',
+        self.itemNames = ['apple', 'banana', 'broccoli', 'celery',
                             'orange', 'onion', 'potato', 'tomato',
                             'soda', 'beer', 'milk', 'cheese']
-        self.__LED = LED
+        self.LED = LED
         self.filename = None
-        self.__match = False
-        self.__response = None
+        self.match = False
+        self.response = None
         
         # Public class members
         self.timestamp = None
@@ -37,13 +37,13 @@ class Detect:
 
         # Set up LED pin
         #GPIO.setmode(GPIO.BCM)
-        #GPIO.setup(self.__LED, GPIO.OUT)
+        #GPIO.setup(self.LED, GPIO.OUT)
 
     # Use Pi Camera to capture an image; toggle LEDs
     def getImage(self):
         print('Capturing image')
         self.timestamp = time.time()
-        self.__filename = 'data/images/' + str(timestamp) + '.png'
+        self.filename = 'data/images/' + str(timestamp) + '.png'
 
         # Camera init and settings
         with PiCamera.PiCamera() as camera:
@@ -79,7 +79,7 @@ class Detect:
 
         with open(self.filename, 'rb') as image:
             base64img = base64.b64encode(image.read())
-            request = self.__client.images().annotate(body={
+            request = self.client.images().annotate(body={
                 'requests': [{
                     'image': {
                         'content': base64img.decode('UTF-8')
@@ -94,45 +94,45 @@ class Detect:
                     }]
                 }]
             })
-        self.__response = request.execute()
+        self.response = request.execute()
     
     # Parse Vision API repsonse to find item match
     def parseResponse(self):
         print('Searching for item match')
 
-        print(json.dumps(self.__response, indent=4, sort_keys=True))
-        print('')
+        #print(json.dumps(self.response, indent=4, sort_keys=True))
+        #print('')
 
         #for i in range(5):
-        #    print(self.__response['responses'][0]['labelAnnotations'][i]['description'])
+        #    print(self.response['responses'][0]['labelAnnotations'][i]['description'])
         #    print('')
-        #    print(self.__response['responses'][0]['webDetection']['webEntities'][i]['description'])
+        #    print(self.response['responses'][0]['webDetection']['webEntities'][i]['description'])
         #    print('')
 
         # Find match in label annotations
-        for i in range(len(self.__response['responses'][0]['labelAnnotations'])):
-            for j in range(len(self.__itemNames)):
-                if self.__itemNames[j] == self.__response["responses"][0]['labelAnnotations'][i]['description']:
-                    self.__match = True
-                    self.item = self.__response["responses"][0]['labelAnnotations'][i]['description']
+        for i in range(len(self.response['responses'][0]['labelAnnotations'])):
+            for j in range(len(self.itemNames)):
+                if self.itemNames[j] == self.response["responses"][0]['labelAnnotations'][i]['description']:
+                    self.match = True
+                    self.item = self.response["responses"][0]['labelAnnotations'][i]['description']
 
         # If no match found, try web detection
-        if self.__match is False:
-            for i in range(len(self.__response['responses'][0]['webDetection']['webEntities'])):
-                for j in range(len(self.__itemNames)):
-                    if self.__itemNames[j] == self.__response["responses"][0]['webDetection']['webEntities'][i]['description']:
-                        self.__match = True
-                        self.item = self.__response["responses"][0]['webDetection']['webentities'][i]['description']
+        if self.match is False:
+            for i in range(len(self.response['responses'][0]['webDetection']['webEntities'])):
+                for j in range(len(self.itemNames)):
+                    if self.itemNames[j] == self.response["responses"][0]['webDetection']['webEntities'][i]['description']:
+                        self.match = True
+                        self.item = self.response["responses"][0]['webDetection']['webentities'][i]['description']
 
 
         # If no match still found, try logo detection
-        #if self.__match is False:
-        #    for i in range(len(self.__response['responses'][0]['logoAnnotations'])):
-        #        for j in range(len(self.__itemNames)):
-        #            if self.__itemNames[j] == self.__response["responses"][0]['logoAnnotations'][i]['description']:
-        #                self.__match = True
-        #                self.item = self.__response["responses"][0]['logoAnnotations'][i]['description']
+        #if self.match is False:
+        #    for i in range(len(self.response['responses'][0]['logoAnnotations'])):
+        #        for j in range(len(self.itemNames)):
+        #            if self.itemNames[j] == self.response["responses"][0]['logoAnnotations'][i]['description']:
+        #                self.match = True
+        #                self.item = self.response["responses"][0]['logoAnnotations'][i]['description']
 
         # Last resort: ask user for input
-        if self.__match is False:
+        if self.match is False:
             self.item = 'Null'	

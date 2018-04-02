@@ -4,10 +4,10 @@ class Scale:
     def __init__(self, data, sck):
         print('Initializing Scale object')
        
-        self.__DATA = data
-        self.__SCK = sck
+        self.DATA = data
+        self.SCK = sck
 
-        self.__hx711 = HX711(self.__DATA, self.__SCK)
+        self.hx711 = HX711(self.DATA, self.SCK)
         self.weight = None
 
     # Record the current weight on the scale
