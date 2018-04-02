@@ -16,7 +16,7 @@ class Detect:
         
         # Cloud Vision authentication
         self.__scopes = ['https://www.googleapis.com/auth/cloud-vision']
-        self.__serviceAccount = '/home/pi/FoodSense-GoogleCloud.json'
+        self.__serviceAccount = '/home/pi/foodsense-gcloud.json'
         
         self.__credentials = service_account.Credentials.from_service_account_file(
             self.__serviceAccount, scopes=self.__scopes)
@@ -100,8 +100,8 @@ class Detect:
     def parseResponse(self):
         print('Searching for item match')
 
-        #print(json.dumps(self.__response, indent=4, sort_keys=True))
-        #print('')
+        print(json.dumps(self.__response, indent=4, sort_keys=True))
+        print('')
 
         #for i in range(5):
         #    print(self.__response['responses'][0]['labelAnnotations'][i]['description'])

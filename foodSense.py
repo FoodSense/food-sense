@@ -3,9 +3,9 @@
 # c. 2018 Derrick Patterson and Mavroidis Mavroidis. All rights reserved.
 
 from detect import Detect
+from monitor import Monitor
 from scale import Scale
 from storage import Storage
-from monitor import Monitor
 import RPi.GPIO as GPIO
 import sys
 
@@ -21,12 +21,12 @@ def main():
     GPIO.setmode(GPIO.BCM)
 
     # Begin initializing necessary components
-    print('Initializing monitor components')
+    print('Initializing system components')
     try:
         monitor = Monitor(DOOR, POWER)  # System monitoring
         scale = Scale(DATA, CLK)        # HX711 for reading scale    
         detect = Detect(LED)            # Camera, Vision API, and parsing
-        storage = Storage()             # Cloud Datastore interface
+        storage = Storage()               # storage interface
 
     except AttributeError:
         print('Failed to initialize all system components')
@@ -50,9 +50,9 @@ def main():
                 if scale.weight > 0:                 # If item was placed on scale
             	    #detect.getImage()               # Take picture of item
                     detect.timestamp=12345
-                    #detect.filename='data/samples/apple.jpg'
-                    #detect.detectItem()              # Send image to Vision API
-                    #detect.parseResponse()           # Match response with list of known items
+                    detect.filename='data/samples/apple.jpg'
+                    detect.detectItem()              # Send image to Vision API
+                    detect.parseResponse()           # Match response with list of known items
                     #storage.addItem(                 # Add item info to list
                     #    detect.item,
                     #    scale.weight,
