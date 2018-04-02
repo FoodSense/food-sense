@@ -1,0 +1,10 @@
+firebase-admin
+google-api-python-client
+google-cloud-firestore
+google-cloud-vision
+hx711
+mcp3008
+picamera
+python-firebase
+RPi.GPIO
+spidev

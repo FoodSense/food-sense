@@ -2,10 +2,10 @@
 # DT08 - Food Sense
 # c. 2018 Derrick Patterson and Mavroidis Mavroidis. All rights reserved.
 
-from detect import Detect
-from monitor import Monitor
-from scale import Scale
-from storage import Storage
+from detect.detect import Detect
+from monitor.monitor import Monitor
+from scale.scale import Scale
+from storage.storage import Storage
 import sys
 import time
 
