@@ -50,6 +50,11 @@ class Storage:
         except google.cloud.exceptions.NotFound:
             print('Item {} not found.'.format(name))
 
+    # Search Firebae for weight
+    def findByWeight(self, weight):
+        print('Searching for {}'.format(weight))
+
+
     # Print list
     def printlist(self):
         print('Printing list')

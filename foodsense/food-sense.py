@@ -2,10 +2,15 @@
 # DT08 - Food Sense
 # c. 2018 Derrick Patterson and Mavroidis Mavroidis. All rights reserved.
 
-from detect import Detect
-from monitor import Monitor
-from scale import Scale
-from storage import Storage
+try:
+    from detect import Detect
+    from monitor import Monitor
+    from scale import Scale
+    from storage import Storage
+except ImportError:
+    print('Failed to import required Food Sense modules')
+    sys.exit()
+
 import sys
 import time
 
@@ -13,6 +18,7 @@ import time
 def main():
     print('Starting Food Sense')
 
+    # GPIO pins
     CLK = 17
     DATA = 22
     DOOR = 27
@@ -38,12 +44,14 @@ def main():
                     monitor.tempWarning()
                 if monitor.doorOpen():
                     monitor.startTimer()
+                    
                     while monitor.doorOpen():
                         if monitor.timerExceeded():
                             monitor.doorWarning()
                         if monitor.checkTemp():
                             monitor.tempWarning()
                     scale.getWeight()
+                    
                     if scale.weight > 0:
                         detect.getImage()
                         detect.detectItem()
