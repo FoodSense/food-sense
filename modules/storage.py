@@ -61,8 +61,8 @@ class Storage:
                 print(u'{}'.format(dict['name']))
 
     # Upload image to Storage
-    def uploadImage(self, filename):
+    def uploadImage(self, timestamp, filename):
         print('Uploading image to Firebase Storage')
 
-        blob = self.bucket.blob('contents')
+        blob = self.bucket.blob(timestamp)
         blob.upload_from_filename(filename=filename)

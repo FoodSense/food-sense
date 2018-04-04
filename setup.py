@@ -11,7 +11,7 @@ setup(
     version='0.4.0',
     description='DT08 Food Sense',
     long_description=readme,
-     author='Kenneth Reitz and Mavroidis Mavroidis',
+    author='Derrick Patterson and Mavroidis Mavroidis',
     author_email='DT08FoodSense@gmail.com',
     url='https://github.com/foodsense/foodsense',
     license=license,
