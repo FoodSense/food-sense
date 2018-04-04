@@ -59,6 +59,9 @@ class Storage:
     def findByWeight(self, weight):
         print('Searching for {}'.format(weight))
 
+        dict = None
+        items = self.db.collection(u'list').get()
+
         try:
             item = []
             name = []
