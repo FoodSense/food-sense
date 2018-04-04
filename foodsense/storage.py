@@ -37,7 +37,12 @@ class Storage:
         except google.cloud.exceptions.NotFound:
             print('Item with weight {} not found.'.format(weight))
 
-    # Search Firebase for item
+    # Search Firebase for timestamp
+    def findbyDTS(self, timestamp):
+        print('Searching for {}'.format(timestamp))
+
+
+    # Search Firebase for name
     def findByName(self, name):
         print('Searching for {}'.format(name))
 
@@ -54,16 +59,28 @@ class Storage:
     def findByWeight(self, weight):
         print('Searching for {}'.format(weight))
 
+        try:
+            item = []
+            name = []
+            docs = self.db.collection(u'list').where(u'weight', u'==', weight).get()
+            for doc in docs:
+                item.append(doc.id)
+                #name.append(
+            print('{} items with weight {} found'.format(len(item), weight))
+            print('')
+        except google.cloud.exceptions.NotFound:
+            print('Item with weight {} not found.'.format(weight))
 
     # Print list
     def printlist(self):
         print('Printing list')
 
+        dict = None
         items = self.db.collection(u'list').get()
         for doc in items:
-            if doc.id != 'default':
+            if doc.id != u'default':
                 dict = doc.to_dict()
-                print(u'{}'.format(dict['name']))
+        print(u'{}'.format(dict['name']))
 
     # Upload image to Storage
     def uploadImage(self, timestamp, filename):
