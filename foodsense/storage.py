@@ -9,7 +9,7 @@ class Storage:
         print('Initializing Storage object')
 
         # Authenticate using Firebase AdminSDK service account
-        self.cred = credentials.Certificate('/home/pi/foodsense-firebase.json')
+        self.cred = credentials.Certificate('/home/derrick/foodsense-firebase.json')
         firebase_admin.initialize_app(self.cred)
         
         self.db = firestore.client()
@@ -61,18 +61,19 @@ class Storage:
 
         dict = None
         items = self.db.collection(u'list').get()
+        print(items)
 
-        try:
-            item = []
-            name = []
-            docs = self.db.collection(u'list').where(u'weight', u'==', weight).get()
-            for doc in docs:
-                item.append(doc.id)
-                #name.append(
-            print('{} items with weight {} found'.format(len(item), weight))
-            print('')
-        except google.cloud.exceptions.NotFound:
-            print('Item with weight {} not found.'.format(weight))
+        #try:
+        #    item = []
+        #    name = []
+        #    docs = self.db.collection(u'list').where(u'weight', u'==', weight).get()
+        #    for doc in docs:
+        #        item.append(doc.id)
+        #        #name.append(
+        #    print('{} items with weight {} found'.format(len(item), weight))
+        #    print('')
+        #except google.cloud.exceptions.NotFound:
+        #    print('Item with weight {} not found.'.format(weight))
 
     # Print list
     def printlist(self):
