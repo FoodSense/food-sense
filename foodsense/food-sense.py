@@ -28,34 +28,34 @@ def main():
     # Begin initializing necessary components
     print('Initializing system components')
     try:
-        #monitor = Monitor(DOOR, POWER)
-        #scale = Scale(DATA, CLK)
         #detect = Detect(LED)
         storage = Storage()
+        #monitor = Monitor(storage, DOOR, POWER)
+        #scale = Scale(DATA, CLK)
     except AttributeError:
         print('Failed to initialize all system components')
         sys.exit()
 
-### START DEBUG ###
+    ### START DEBUG ###
 
+    storage.printList()
 
-
-### END DEBUG ###
+    ### END DEBUG ###
 
     # Main program loop
 #    while True:
 #        while monitor.powerOn():
 #            while monitor.doorClosed():
 #                if monitor.checkTemp():
-#                    monitor.tempWarning()
+#                    storage.tempWarning()
 #                if monitor.doorOpen():
 #                    monitor.startTimer()
 #                    
 #                    while monitor.doorOpen():
 #                        if monitor.timerExceeded():
-#                            monitor.doorWarning()
+#                            storage.doorWarning()
 #                        if monitor.checkTemp():
-#                            monitor.tempWarning()
+#                            storage.tempWarning()
 #                    scale.getWeight()
                     
 #                    if scale.weight > 0:
@@ -66,7 +66,7 @@ def main():
 #                                detect.item,
 #                                scale.weight, 
 #                                detect.timestamp)
-#                        storage.uploadImage(detect.filename)
+#                        storage.uploadImage(detect.timestamp, detect.filename)
 #                    elif scale.weight < 0:
 #                        storage.removeItem(scale.weight) 
 #                    else:
