@@ -37,8 +37,12 @@ def main():
         sys.exit()
 
     storage.printList()
-    storage.findByWeight(50)
-    storage.findByWeight(100)
+    storage.findByDTS('12345')
+    storage.findByDTS('67890')
+    storage.findByDTS('28734')
+
+    #storage.findByWeight(50)
+    #storage.findByWeight(100)
     sys.exit()
 
     # Main program loop
