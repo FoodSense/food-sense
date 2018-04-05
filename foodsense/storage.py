@@ -17,16 +17,17 @@ class Storage:
 
         # Authenticate using Firebase AdminSDK service account
         #self.cred = credentials.Certificate('/home/derrick/service-accounts/foodsense-firebase.json')
-        #self.cred = credentials.Certificate('/home/derrick/service-accounts/test-firebase.json')
-        #firebase_admin.initialize_app(self.cred)
-        firebase_admin.initialize_app()
+        self.cred = credentials.Certificate('/home/derrick/service-accounts/test-firebase.json')
+        firebase_admin.initialize_app(self.cred)
+        
 
         self.db = firestore.client()
         #self.bucket = storage.bucket('food-sense-199718.appspot.com')
         self.bucket = storage.bucket('avian-silicon-200216.appspot.com')
-    
-    ### FIREBASE FIRESTORE ###
+        self.registration_token = 'APP REGISTRATION TOKEN'
 
+
+    ### FIREBASE FIRESTORE ###
     # Add new item to Firebase
     def addItem(self, item, weight, timestamp):
         print('Adding {} to list'.format(item))
@@ -106,8 +107,8 @@ class Storage:
                 dict = doc.to_dict()
                 print(u'{}'.format(dict['name']))
 
-    ### FIREBASE STORAGE ###
 
+    ### FIREBASE STORAGE ###
     # Upload image to Storage
     def uploadImage(self, timestamp, filename):
         print('Uploading image to Firebase Storage')
@@ -115,18 +116,46 @@ class Storage:
         blob = self.bucket.blob(timestamp)
         blob.upload_from_filename(filename=filename
     
-    ## CLOUD MESSAGING ##
 
+    ## CLOUD MESSAGING ##
     # Send door warning notification to app
     def doorWarning():
         print('Door push notification')               
     
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title='Door Warning',
+                body='The door has been left open for more than 2 minutes!',
+            ),
+            token=self.registration_token,
+        )
+        response = messaging.send(message)
+        print('Successfully send message:', response)
+
     # Send temp warning notificaiotn to app
     def tempWarning():
         print('Temp push notification')
+        
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title='Temperature Warning',
+                body='The temperature in the fridge has exceeded 4.4C!',
+            ),
+            token=self.registration_token,
+        )
+        response = messaging.send(message)
+        print('Successfully send message:', response)
 
     # Send power warning notificaiton to app
     def powerWarning():
         print('Power push notification')
 
-
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title='Power Warning',
+                body='Food Sense has lost power!',
+            ),
+            token=self.registration_token,
+        )
+        response = messaging.send(message)
+        print('Successfully send message:', response)
