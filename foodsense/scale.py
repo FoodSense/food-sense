@@ -13,3 +13,7 @@ class Scale:
     # Record the current weight on the scale
     def getWeight(self):
         print('Reading scale')
+
+        #value = readScale()
+        #lbs = 0.0022 * value
+        #self.weight = round((lbs * 2) / 2)

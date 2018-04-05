@@ -36,24 +36,11 @@ def main():
         print('Failed to initialize all system components')
         sys.exit()
 
-    storage.printList()
-    print('')
+### START DEBUG ###
 
-    storage.findName('apple')
-    storage.findName('banana')
-    storage.findName('orange') 
-    print('')
 
-    storage.findWeight(75)
-    storage.findWeight(50)
-    storage.findWeight(55)
-    print('')
 
-    storage.findDTS('12345')
-    storage.findDTS('67890')
-    storage.findDTS('28734')
-
-    sys.exit()
+### END DEBUG ###
 
     # Main program loop
 #    while True:

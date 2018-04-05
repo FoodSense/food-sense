@@ -1,8 +1,14 @@
-import firebase_admin
-from firebase_admin import credentials
-from firebase_admin import firestore
-from firebase_admin import storage
-import google.cloud.exceptions
+import sys
+
+try:
+    import firebase_admin
+    from firebase_admin import credentials
+    from firebase_admin import firestore
+    from firebase_admin import storage
+    import google.cloud.exceptions
+except ImportError:
+    print('Failed to import all necessary packages for Storage class')
+    sys.exit()
 
 class Storage:
     # Initialize object
@@ -31,15 +37,28 @@ class Storage:
     # Remove item from Firebase
     def removeItem(self, weight):
         print('Removing item with weight {} from list'.format(weight))
-
+        
         try:
-            docs = self.db.collection(u'list').where(u'weight', u'==', weight).get()
-            for doc in docs:
+            item = None
+            match = self.db.collection(u'list').where(u'weight', u'==', weight).get()
+            for doc in match:
                 item = doc.id
             self.db.collection(u'list').document(item).delete()
+            #if len(item) == 1:
+            #
+            #elif len(item) > 1:
+            #    error = 0.01
+            #    lowerBound = round(((weight - error*weight) * 2 ) / 2)
+            #    upperBound = round(((weight + error*weight) * 2 ) / 2)
+            #
+            #    for i in np.arange(lowerBound, upperBound, 0.5):
+            #        match = self.db.collection(u'list').where(u'weight', u'==', i).get()
+            #        for doc in match:
+            #            item.append(doc.id)
+            #        self.db.collection(u'list').document(item).delete()
         except google.cloud.exceptions.NotFound:
-            print('Item with weight {} not found.'.format(weight))
-    
+            print('No match found for weight {}'.format(weight))
+
     # Search Firebase for name
     def findName(self, name):
         print('Searching for name {}'.format(name))

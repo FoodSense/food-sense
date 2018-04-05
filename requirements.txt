@@ -1,7 +1,7 @@
 firebase-admin
-google-api-python-client
 google-cloud-vision
 mcp3008
+numpy
 picamera
 RPi.GPIO
 spidev
