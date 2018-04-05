@@ -37,12 +37,22 @@ def main():
         sys.exit()
 
     storage.printList()
-    storage.findByDTS('12345')
-    storage.findByDTS('67890')
-    storage.findByDTS('28734')
+    print('')
 
-    #storage.findByWeight(50)
-    #storage.findByWeight(100)
+    storage.findName('apple')
+    storage.findName('banana')
+    storage.findName('orange') 
+    print('')
+
+    storage.findWeight(75)
+    storage.findWeight(50)
+    storage.findWeight(55)
+    print('')
+
+    storage.findDTS('12345')
+    storage.findDTS('67890')
+    storage.findDTS('28734')
+
     sys.exit()
 
     # Main program loop

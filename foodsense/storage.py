@@ -2,6 +2,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from firebase_admin import storage
+import google.cloud.exceptions
 
 class Storage:
     # Initialize object
@@ -9,8 +10,8 @@ class Storage:
         print('Initializing Storage object')
 
         # Authenticate using Firebase AdminSDK service account
-        #self.cred = credentials.Certificate('/home/derrick/foodsense-firebase.json')
-        self.cred = credentials.Certificate('/home/derrick/test-firebase.json')
+        #self.cred = credentials.Certificate('/home/derrick/service-accounts/foodsense-firebase.json')
+        self.cred = credentials.Certificate('/home/derrick/service-accounts/test-firebase.json')
         firebase_admin.initialize_app(self.cred)
         
         self.db = firestore.client()
@@ -22,7 +23,7 @@ class Storage:
         print('Adding {} to list'.format(item))
 
         # Data fields for key
-        data = { u'name': item, u'weight': weight }
+        data = { u'name': item, u'weight': weight, u'dts': timestamp }
 
         # Push 'key: {data}' to 'list' collection
         self.db.collection(u'list').document(timestamp).set(data)
@@ -40,31 +41,45 @@ class Storage:
             print('Item with weight {} not found.'.format(weight))
     
     # Search Firebase for name
-    def findByName(self, name):
-        print('Searching for {}'.format(name))
+    def findName(self, name):
+        print('Searching for name {}'.format(name))
 
-    # Search Firebae for weight
-    def findByWeight(self, weight):
-        print('Searching for {}'.format(weight))
+        dict = None
+        matches = self.db.collection(u'list').where(u'name', u'==', name).get()
+        for doc in matches:
+            dict = doc.to_dict()
+        print('Match(es) found:')
+        print(dict)
+
+    # Search Firebase for weight
+    def findWeight(self, weight):
+        print('Searching for weight {}'.format(weight))
+
+        dict = None
+        matches = self.db.collection(u'list').where(u'weight', u'==', weight).get()
+        for doc in matches:
+            dict = doc.to_dict()
+        print('Match(es) found:')
+        print(dict)
 
     # Search Firebase for timestamp
-    def findByDTS(self, timestamp):
-        print('Searching for {}'.format(timestamp))
+    def findDTS(self, timestamp):
+        print('Searching for timestamp {}'.format(timestamp))
 
-        #item_ref = self.db.collection(u'list').document(timestamp)
-        #try:
-        #    item = item_ref.get()
-        #    print(u'Document data: {}'.format(item.to_dict()))
-        #except google.cloud.exceptions.NotFound:
-        #    print(u'Not found')
+        match = self.db.collection(u'list').document(timestamp)
+        try:
+            item = match.get()
+            print('Match found: {}'.format(item.to_dict()))
+        except google.cloud.exceptions.NotFound:
+            print('No Match found')
             
     # Print list
     def printList(self):
         print('Printing list')
 
         dict = None
-        items = self.db.collection(u'list').get()
-        for doc in items:
+        docs = self.db.collection(u'list').get()
+        for doc in docs:
             if doc.id != u'default':
                 dict = doc.to_dict()
                 print(u'{}'.format(dict['name']))
