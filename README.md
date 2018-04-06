@@ -21,5 +21,5 @@ See LICENSE for further details.
 
 ## Acknowledgments 
 
-hx711.py and scale.py courtesy of dcrystalj: [GitHub](https://github.com/dcrystalj/hx711py3)
+hx711.py and scale.py courtesy of [dcrystalj](https://github.com/dcrystalj): [hx711py3](https://github.com/dcrystalj/hx711py3)<br/>
 See CHANGELOG for details on any changes made to these files.
