@@ -11,6 +11,9 @@ class Scale:
         self.spikes = spikes
         self.sleep = sleep
         self.history = []
+        
+        # Weight value that will be used by storage class
+        self.weight = None
 
     def newMeasure(self):
         value = self.source.getWeight()
@@ -44,7 +47,11 @@ class Scale:
 
         [self.newMeasure() for i in range(samples or self.samples)]
 
-        return self.getMeasure()
+        # Get raw value from scale
+        value = self.getMeasure()
+        
+        # Round value to closest 0.5 g
+        self.weight = round((value * 2) / 2)
 
     def tare(self, times=25):
         self.source.tare(times)
