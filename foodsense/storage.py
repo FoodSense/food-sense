@@ -11,7 +11,6 @@ except ImportError:
     sys.exit()
 
 class Storage:
-    # Initialize object
     def __init__(self):
         print('Initializing Storage object')
 
@@ -24,10 +23,7 @@ class Storage:
         self.db = firestore.client()
         #self.bucket = storage.bucket('food-sense-199718.appspot.com')
         self.bucket = storage.bucket('avian-silicon-200216.appspot.com')
-        self.registration_token = 'APP REGISTRATION TOKEN'
 
-
-    ### FIREBASE FIRESTORE ###
     # Add new item to Firebase
     def addItem(self, item, weight, timestamp):
         print('Adding {} to list'.format(item))
@@ -108,7 +104,6 @@ class Storage:
                 print(u'{}'.format(dict['name']))
 
 
-    ### FIREBASE STORAGE ###
     # Upload image to Storage
     def uploadImage(self, timestamp, filename):
         print('Uploading image to Firebase Storage')
@@ -117,17 +112,18 @@ class Storage:
         blob.upload_from_filename(filename=filename
     
 
-    ## CLOUD MESSAGING ##
     # Send door warning notification to app
     def doorWarning():
         print('Door push notification')               
     
+        topic = 'DoorWarning'
+
         message = messaging.Message(
             notification=messaging.Notification(
                 title='Door Warning',
                 body='The door has been left open for more than 2 minutes!',
             ),
-            token=self.registration_token,
+            topic=topic,
         )
         response = messaging.send(message)
         print('Successfully send message:', response)
@@ -136,12 +132,14 @@ class Storage:
     def tempWarning():
         print('Temp push notification')
         
+        topic = 'TempWarning'
+
         message = messaging.Message(
             notification=messaging.Notification(
                 title='Temperature Warning',
                 body='The temperature in the fridge has exceeded 4.4C!',
             ),
-            token=self.registration_token,
+            topic=topic,
         )
         response = messaging.send(message)
         print('Successfully send message:', response)
@@ -150,12 +148,14 @@ class Storage:
     def powerWarning():
         print('Power push notification')
 
+        topic = 'PowerWarning'
+
         message = messaging.Message(
             notification=messaging.Notification(
                 title='Power Warning',
                 body='Food Sense has lost power!',
             ),
-            token=self.registration_token,
+            topic=topic,
         )
         response = messaging.send(message)
         print('Successfully send message:', response)
