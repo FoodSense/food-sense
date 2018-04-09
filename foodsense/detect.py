@@ -23,7 +23,7 @@ class Detect:
         
         # Cloud Vision authentication
         self.scopes = ['https://www.googleapis.com/auth/cloud-vision']
-        self.serviceAccount = '/home/pi/foodsense-gcloud.json'
+        self.serviceAccount = '/home/pi/service-accounts/foodsense-googlecloud.json'
         
         self.credentials = service_account.Credentials.from_service_account_file(
             self.serviceAccount, scopes=self.scopes)
@@ -43,14 +43,15 @@ class Detect:
         self.item = None
 
         # Set up LED pin
-        #GPIO.setmode(GPIO.BCM)
-        #GPIO.setup(self.LED, GPIO.OUT)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+        GPIO.setup(self.LED, GPIO.OUT)
 
     # Use Pi Camera to capture an image; toggle LEDs
     def getImage(self):
         print('Capturing image')
         self.timestamp = time.time()
-        self.filename = 'data/images/' + str(self.timestamp) + '.png'
+        self.filename = '../data/images/' + str(self.timestamp) + '.png'
 
         # Camera init and settings
         with PiCamera() as camera:
@@ -122,6 +123,10 @@ class Detect:
                 if self.itemNames[j] == self.response["responses"][0]['labelAnnotations'][i]['description']:
                     self.match = True
                     self.item = self.response["responses"][0]['labelAnnotations'][i]['description']
+                    break
+            else:
+                continue
+            break
 
         # If no match found, try web detection
         if self.match is False:
@@ -130,6 +135,10 @@ class Detect:
                     if self.itemNames[j] == self.response["responses"][0]['webDetection']['webEntities'][i]['description']:
                         self.match = True
                         self.item = self.response["responses"][0]['webDetection']['webentities'][i]['description']
+                        break
+                else:
+                    continue
+                break
 
         # If no match still found, try logo detection
         #if self.match is False:
@@ -140,7 +149,7 @@ class Detect:
         #                self.item = self.response["responses"][0]['logoAnnotations'][i]['description']
 
         if self.match is False:
-            print('No item found')
+            print('No match found')
             sys.exit()
         else:
-            print('Item found: '.format(self.item))
+            print('Item found: ' + self.item)

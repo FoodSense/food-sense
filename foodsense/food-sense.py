@@ -2,8 +2,8 @@ import sys
 import time
 
 try:
-    #from detect import Detect
-    #from monitor import Monitor
+    from detect import Detect
+    from monitor import Monitor
     #from scale import Scale
     from storage import Storage
 except ImportError:
@@ -24,9 +24,9 @@ def main():
     # Begin initializing necessary components
     print('Initializing system components')
     try:
-        #detect = Detect(LED)
+        detect = Detect(LED)
         storage = Storage()
-        #monitor = Monitor(DOOR, POWER)
+        monitor = Monitor(DOOR, POWER)
         #scale = Scale(DATA, CLK)
     except AttributeError:
         print('Failed to initialize all system components')
@@ -34,9 +34,40 @@ def main():
 
     ### START DEBUG ###
 
+    ## Montor class testing ##
+    if (monitor.checkTemp()):
+        print('Exceeded temperature threshold')
+    else:
+        print('Temperature within safe limits')
+
+    #monitor.startTimer()
+    #while True:
+    #    if monitor.timerExceeded():
+    #        print('Door open for too long')
+    #        break
+    #    else:
+    #        print('Door ok')
+
+    ## Detect class testing ##
+    detect.getImage()
+    detect.detectItem()
+    detect.parseResponse()
+    
+    ## Storage class testing ##
+    
+    storage.addItem(
+            detect.item,
+            74,
+            detect.timestamp)
+
+    storage.uploadImage(
+            detect.timestamp,
+            detect.filename)
+
     #storage.doorWarning()
-    storage.tempWarning()
+    #storage.tempWarning()
     #storage.powerWarning()
+
 
     ### END DEBUG ###
 

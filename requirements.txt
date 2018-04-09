@@ -1,6 +1,9 @@
 firebase-admin
+google-api-python-client
+google-auth-httplib2
 google-cloud-vision
-mcp3008
+adafruit-mcp3008
 picamera
+pyfcm
 RPi.GPIO
 spidev
