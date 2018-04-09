@@ -26,16 +26,8 @@ class Storage:
         self.bucket = storage.bucket('avian-silicon-200216.appspot.com')
 
         self.api_key = 'AAAAg0N7t5A:APA91bHBcaxSAnpfjLNeieXz_H1P3W1OskS7VsEXgcCXNao2NB0Iq2D9aG0KlOCLzh5_dRXLgBX_BaIX-2tC3Wny-cn3nOzbTXCjcWPkq9i3Fbi7GplYMst-Dmb6PGrflPE06FP0qVRs'
-
         self.pushService = FCMNotification(api_key=self.api_key)
-
-        self.tokens = [
-            'news',
-        ]
     
-        #self.subscribed = push_service.subscribe_registration_ids_to_topic(self.tokens, 'test')
-        #self.unsubscribed = push_service.unsubscribe_registration_ids_from_topic(self.tokens, 'test')
-
     # Add new item to Firebase
     def addItem(self, item, weight, timestamp):
         print('Adding {} to list'.format(item))
@@ -127,36 +119,33 @@ class Storage:
     def doorWarning(self):
         print('Door push notification')               
     
-        result = self.pushService.notify_topic_subscribers(topic_name='news', message_body='news test from pi')
+        message = 'The door has been open for more than 2 minutes!'
+
+        result = self.pushService.notify_topic_subscribers(
+                topic_name = 'news',
+                message_body = message
+                )
 
     # Send temp warning notificaiotn to app
     def tempWarning():
         print('Temp push notification')
         
-        #topic = 'TempWarning'
+        message = 'The temperature has exceeded safe limits!'
 
-        #message = messaging.Message(
-        #    notification=messaging.Notification(
-        #        title='Temperature Warning',
-        #        body='The temperature in the fridge has exceeded 4.4C!',
-        #    ),
-        #    topic=topic,
-        #)
-        #response = messaging.send(message)
-        #print('Successfully send message:', response)
+        result = self.pushService.notify_topic_subscrubers(
+                topic_name = 'temp',
+                message_body = message
+                )
 
     # Send power warning notificaiton to app
     def powerWarning():
         print('Power push notification')
+        
+        message = 'Power has failed! Food Sense is now operating on battery power'
 
-        #topic = 'PowerWarning'
+        result = self.pushService.notify_topic_subscrubers(
+                topic_name = 'power',
+                message_body = message
+                )
 
-        #message = messaging.Message(
-        #    notification=messaging.Notification(
-        #        title='Power Warning',
-        #        body='Food Sense has lost power!',
-        #    ),
-        #    topic=topic,
-        #)
-        #response = messaging.send(message)
-        #print('Successfully send message:', response)
+
