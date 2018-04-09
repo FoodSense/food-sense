@@ -1,7 +1,3 @@
-# foodSense.py
-# DT08 - Food Sense
-# c. 2018 Derrick Patterson and Mavroidis Mavroidis. All rights reserved.
-
 import sys
 import time
 
@@ -14,7 +10,7 @@ except ImportError:
     print('Failed to import required Food Sense modules')
     sys.exit()
 
-# Main method
+# Entrypoint
 def main():
     print('Starting Food Sense')
 
@@ -30,7 +26,7 @@ def main():
     try:
         #detect = Detect(LED)
         storage = Storage()
-        #monitor = Monitor(storage, DOOR, POWER)
+        #monitor = Monitor(DOOR, POWER)
         #scale = Scale(DATA, CLK)
     except AttributeError:
         print('Failed to initialize all system components')

@@ -1,13 +1,18 @@
-from google.oauth2 import service_account
-from googleapiclient import discovery
-from picamera import PiCamera
-import RPi.GPIO as GPIO
 import base64
 import io
 import json
 import logging
 import time
 import sys
+
+try:
+    from google.oauth2 import service_account
+    from googleapiclient import discovery
+    from picamera import PiCamera
+    import RPi.GPIO as GPIO
+except ImportError:
+    print('Failed to import required Detect class modules')
+    sys.exit()
 
 class Detect:
     def __init__(self, LED):
