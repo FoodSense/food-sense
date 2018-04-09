@@ -41,5 +41,7 @@ See LICENSE for further details.
 
 ## Acknowledgments 
 
+adafruit-mcp3008 package courtesy of [Adafruit](https://github.com/adafruit): [Adafruit-MCP3008](https://github.com/adafruit/adafruit-python-mcp3008)<br/>
 hx711.py and scale.py courtesy of [dcrystalj](https://github.com/dcrystalj): [hx711py3](https://github.com/dcrystalj/hx711py3)<br/>
+pyFCM package courtesy of [olucurious](https://github.com/olucurious): [PyFCM](https://github.com/olucurious/pyfcm)<br/>
 See CHANGELOG for details on any changes made to these files.
