@@ -34,7 +34,9 @@ def main():
 
     ### START DEBUG ###
 
-    storage.doorWarning()
+    #storage.doorWarning()
+    storage.tempWarning()
+    #storage.powerWarning()
 
     ### END DEBUG ###
 

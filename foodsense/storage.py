@@ -122,29 +122,32 @@ class Storage:
         message = 'The door has been open for more than 2 minutes!'
 
         result = self.pushService.notify_topic_subscribers(
-                topic_name = 'news',
+                topic_name = 'door',
+                message_title = 'Door Warning',
                 message_body = message
                 )
 
     # Send temp warning notificaiotn to app
-    def tempWarning():
+    def tempWarning(self):
         print('Temp push notification')
         
-        message = 'The temperature has exceeded safe limits!'
+        message = 'Temperature has exceeded safe limits!'
 
-        result = self.pushService.notify_topic_subscrubers(
+        result = self.pushService.notify_topic_subscribers(
                 topic_name = 'temp',
+                message_title = 'Temperature Warning',
                 message_body = message
                 )
 
     # Send power warning notificaiton to app
-    def powerWarning():
+    def powerWarning(self):
         print('Power push notification')
         
         message = 'Power has failed! Food Sense is now operating on battery power'
 
-        result = self.pushService.notify_topic_subscrubers(
+        result = self.pushService.notify_topic_subscribers(
                 topic_name = 'power',
+                message_title = 'Power Warning',
                 message_body = message
                 )
 
