@@ -6,6 +6,7 @@ try:
     from firebase_admin import firestore
     from firebase_admin import storage
     import google.cloud.exceptions
+    from pyfcm import FCMNotification
 except ImportError:
     print('Failed to import all necessary packages for Storage class')
     sys.exit()
@@ -23,6 +24,17 @@ class Storage:
         self.db = firestore.client()
         #self.bucket = storage.bucket('food-sense-199718.appspot.com')
         self.bucket = storage.bucket('avian-silicon-200216.appspot.com')
+
+        self.api_key = 'AAAAg0N7t5A:APA91bHBcaxSAnpfjLNeieXz_H1P3W1OskS7VsEXgcCXNao2NB0Iq2D9aG0KlOCLzh5_dRXLgBX_BaIX-2tC3Wny-cn3nOzbTXCjcWPkq9i3Fbi7GplYMst-Dmb6PGrflPE06FP0qVRs'
+
+        self.pushService = FCMNotification(api_key=self.api_key)
+
+        self.tokens = [
+            'news',
+        ]
+    
+        #self.subscribed = push_service.subscribe_registration_ids_to_topic(self.tokens, 'test')
+        #self.unsubscribed = push_service.unsubscribe_registration_ids_from_topic(self.tokens, 'test')
 
     # Add new item to Firebase
     def addItem(self, item, weight, timestamp):
@@ -109,53 +121,42 @@ class Storage:
         print('Uploading image to Firebase Storage')
 
         blob = self.bucket.blob(timestamp)
-        blob.upload_from_filename(filename=filename
+        blob.upload_from_filename(filename=filename)
     
-
     # Send door warning notification to app
-    def doorWarning():
+    def doorWarning(self):
         print('Door push notification')               
     
-        topic = 'DoorWarning'
-
-        message = messaging.Message(
-            notification=messaging.Notification(
-                title='Door Warning',
-                body='The door has been left open for more than 2 minutes!',
-            ),
-            topic=topic,
-        )
-        response = messaging.send(message)
-        print('Successfully send message:', response)
+        result = self.pushService.notify_topic_subscribers(topic_name='news', message_body='news test from pi')
 
     # Send temp warning notificaiotn to app
     def tempWarning():
         print('Temp push notification')
         
-        topic = 'TempWarning'
+        #topic = 'TempWarning'
 
-        message = messaging.Message(
-            notification=messaging.Notification(
-                title='Temperature Warning',
-                body='The temperature in the fridge has exceeded 4.4C!',
-            ),
-            topic=topic,
-        )
-        response = messaging.send(message)
-        print('Successfully send message:', response)
+        #message = messaging.Message(
+        #    notification=messaging.Notification(
+        #        title='Temperature Warning',
+        #        body='The temperature in the fridge has exceeded 4.4C!',
+        #    ),
+        #    topic=topic,
+        #)
+        #response = messaging.send(message)
+        #print('Successfully send message:', response)
 
     # Send power warning notificaiton to app
     def powerWarning():
         print('Power push notification')
 
-        topic = 'PowerWarning'
+        #topic = 'PowerWarning'
 
-        message = messaging.Message(
-            notification=messaging.Notification(
-                title='Power Warning',
-                body='Food Sense has lost power!',
-            ),
-            topic=topic,
-        )
-        response = messaging.send(message)
-        print('Successfully send message:', response)
+        #message = messaging.Message(
+        #    notification=messaging.Notification(
+        #        title='Power Warning',
+        #        body='Food Sense has lost power!',
+        #    ),
+        #    topic=topic,
+        #)
+        #response = messaging.send(message)
+        #print('Successfully send message:', response)

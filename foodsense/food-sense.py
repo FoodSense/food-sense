@@ -38,7 +38,7 @@ def main():
 
     ### START DEBUG ###
 
-    storage.printList()
+    storage.doorWarning()
 
     ### END DEBUG ###
 
