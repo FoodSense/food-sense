@@ -34,46 +34,58 @@ def main():
         sys.exit()
 
     ### START DEBUG ###
+   
+    scale.setReferenceUnit(21)
+    scale.reset()
+    scale.tare()
+
+    while True:
+        monitor.checkTemp()
+        scale.getWeight()
+        print('Weight: {0: 4.4f}'.format(scale.weight))
+        time.sleep(5)
+    sys.exit()
+
     ### END DEBUG ###
 
     # Main program loop
-    while True:
-        while monitor.powerOn():
-            while monitor.doorClosed():
-                if monitor.checkTemp():
-                    storage.tempWarning()
-                if monitor.doorOpen():
-                    monitor.startTimer()
-                    
-                    while monitor.doorOpen():
-                        if monitor.timerExceeded():
-                            storage.doorWarning()
-                        if monitor.checkTemp():
-                            storage.tempWarning()
-                    scale.getWeight()
-                   
-                    if scale.weight > 0:
-                        detect.getImage()
-                        detect.detectItem()
-                        detect.parseResponse()
-                        storage.addItem(
-                                detect.item,
-                                scale.weight, 
-                                detect.timestamp)
-                        storage.uploadImage(detect.timestamp, detect.filename)
-                    elif scale.weight < 0:
-                        storage.removeItem(scale.weight) 
-                    else:
-                        pass
-                    sys.exit()
-                else:
-                    pass
-            else:
-                print('Door must be closed on system start')
-        else:
-            monitor.powerWarning()
-    else:
-        pass
+#    while True:
+#        while monitor.powerOn():
+#            while monitor.doorClosed():
+#                if monitor.checkTemp():
+#                    storage.tempWarning()
+#                if monitor.doorOpen():
+#                    monitor.startTimer()
+#                    
+#                    while monitor.doorOpen():
+#                        if monitor.timerExceeded():
+#                            storage.doorWarning()
+#                        if monitor.checkTemp():
+#                            storage.tempWarning()
+#                    scale.getWeight()
+#                   
+#                    if scale.weight > 0:
+#                        detect.getImage()
+#                        detect.detectItem()
+#                        detect.parseResponse()
+#                        storage.addItem(
+#                                detect.item,
+#                                scale.weight, 
+#                                detect.timestamp)
+#                        storage.uploadImage(detect.timestamp, detect.filename)
+#                    elif scale.weight < 0:
+#                        storage.removeItem(scale.weight) 
+#                    else:
+#                        pass
+#                    sys.exit()
+#                else:
+#                    pass
+#            else:
+#                print('Door must be closed on system start')
+#        else:
+#            storage.powerWarning()
+#    else:
+#        pass
 
 # Call main()
 if __name__ == '__main__':

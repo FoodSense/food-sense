@@ -36,6 +36,7 @@ class Monitor:
         value = self.mcp.read_adc(0)
         self.temp = value / 10
 
+        print('Raw value: ' + str(value))
         print('Temp: ' + str(self.temp) + 'C / ' + str(((9*self.temp)/5) + 32) + 'F')
 
         if (self.temp >= self.maxTemp):
