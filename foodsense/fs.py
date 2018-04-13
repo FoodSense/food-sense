@@ -34,17 +34,6 @@ def main():
         sys.exit()
 
     ### START DEBUG ###
-   
-    scale.setReferenceUnit(21)
-    scale.reset()
-    scale.tare()
-
-    while True:
-        monitor.checkTemp()
-        scale.getWeight()
-        print('Weight: {0: 4.4f}'.format(scale.weight))
-        time.sleep(5)
-    sys.exit()
 
     ### END DEBUG ###
 

@@ -15,16 +15,19 @@ class Storage:
     def __init__(self):
         print('Initializing Storage object')
 
-        # Authenticate using Firebase AdminSDK service account
-        self.cred = credentials.Certificate('/home/pi/Food Sense/Service Accounts/foodsense-firebase.json')
+        # Authenticate with Firebase using AdminSDK service account
+        #self.cred = credentials.Certificate('/home/pi/Food Sense/Service Accounts/foodsense-firebase.json')
+        self.cred = credentials.Certificate('/home/derrick/food-sense/service-accounts/test-firebase.json')
         firebase_admin.initialize_app(self.cred)
-
-
         self.db = firestore.client()
-        self.bucket = storage.bucket('food-sense-199718.appspot.com')
 
-        self.api_key = 'AAAAYDyGdIE:APA91bHW_WpPWEjG-GgxwszERAfIADupdxKiyzZjoI_O84j4Xv6XQnjXugRAC07b0wtWWC3A9S_7miYEHYs4T_R8SI0x6EK3McxmR7AJ-4UEARp9wgiCsv5K0Z57-yJqiELIj8ACflyY'
-        self.pushService = FCMNotification(api_key=self.api_key)
+        # Connect to Firebase Storage bucket
+        #self.bucket = storage.bucket('food-sense-199718.appspot.com')
+        self.bucket = storage.bucket('avian-silicon-200216.appspot.com')
+
+        # Authenticate with FCM through PyFCM
+        self.apiKey = 'AAAAg0N7t5A:APA91bHBcaxSAnpfjLNeieXz_H1P3W1OskS7VsEXgcCXNao2NB0Iq2D9aG0KlOCLzh5_dRXLgBX_BaIX-2tC3Wny-cn3nOzbTXCjcWPkq9i3Fbi7GplYMst-Dmb6PGrflPE06FP0qVRs'
+        self.pushService = FCMNotification(api_key=self.apiKey)
 
     # Add new item to Firebase
     def addItem(self, item, weight, timestamp):
@@ -123,13 +126,13 @@ class Storage:
 
         message = 'The door has been open for more than 2 minutes!'
 
-        result = self.pushService.notify_topic_subscribers(
-                topic_name = 'door',
+        result = self.pushService.notify_single_device(
+                registration_id = self.registration_id,
                 message_title = 'Door Warning',
                 message_body = message
                 )
 
-    # Send temp warning notificaiotn to app
+    # Send temp warning notification to app
     def tempWarning(self):
         print('Temp push notification')
 
