@@ -55,27 +55,27 @@ class Firebase:
 		except google.cloud.exceptions.NotFound:
 			print('No match found for name {}'.format(name))
 
-	# Remove item by weight
-	def removeItem(self, weight):
-		print('Removing item with weight {} from list'.format(weight))
+	## Remove item by weight
+	#def removeItem(self, weight):
+		#print('Removing item with weight {} from list'.format(weight))
 
-		try:
-			item = None
-			match = self.db.collection(u'list').where(u'weight', u'==', weight).get()
-			for doc in match:
-				item = doc.id
-			self.db.collection(u'list').document(item).delete()
-		except google.cloud.exceptions.NotFound:
-			print('No match found for weight {}'.format(weight))
+		#try:
+			#item = None
+			#match = self.db.collection(u'list').where(u'weight', u'==', weight).get()
+			#for doc in match:
+				#item = doc.id
+			#self.db.collection(u'list').document(item).delete()
+		#except google.cloud.exceptions.NotFound:
+			#print('No match found for weight {}'.format(weight))
 
-	# Remove item by DTS
-	def removeItem(self, dts):
-		print('Removing {} from list'.format(dts))
+	## Remove item by DTS
+	#def removeItem(self, dts):
+		#print('Removing {} from list'.format(dts))
 
-		try:
-			self.db.collection(u'list').document(dts).delete()
-		except google.cloud.exceptions.NotFound:
-			print(u'No such document!')
+		#try:
+			#self.db.collection(u'list').document(dts).delete()
+		#except google.cloud.exceptions.NotFound:
+			#print(u'No such document!')
 
 	# Search Firebase for name
 	def searchList(self, name):
