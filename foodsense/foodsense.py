@@ -22,7 +22,7 @@ def foodSense():
 
 	### START DEBUG ###
 
-	det.timestamp = 'pop'
+	det.timestamp = 'beer'
 	det.filename = '../images/' + det.timestamp + '.jpg'
 	det.detectItem()
 	det.parseResponse()

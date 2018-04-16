@@ -42,7 +42,20 @@ class Firebase:
 		# Push 'key: {data}' to 'list' collection
 		self.db.collection(u'list').document(dts).set(data)
 
-	# Remove item from Firebase
+	# Remove item by name
+	def removeItem(self, name):
+		print('Removing {} from list'.format(name))
+
+		try:
+			item = None
+			match = self.db.collection(u'list').where(u'name', u'==', name).get()
+			for doc in match:
+				item = doc.id
+			self.db.collection(u'list').document(item).delete()
+		except google.cloud.exceptions.NotFound:
+			print('No match found for name {}'.format(name))
+
+	# Remove item by weight
 	def removeItem(self, weight):
 		print('Removing item with weight {} from list'.format(weight))
 
@@ -52,23 +65,20 @@ class Firebase:
 			for doc in match:
 				item = doc.id
 			self.db.collection(u'list').document(item).delete()
-			#if len(item) == 1:
-			#
-			#elif len(item) > 1:
-			#    error = 0.01
-			#    lowerBound = round(((weight - error*weight) * 2 ) / 2)
-			#    upperBound = round(((weight + error*weight) * 2 ) / 2)
-			#
-			#    for i in np.arange(lowerBound, upperBound, 0.5):
-			#        match = self.db.collection(u'list').where(u'weight', u'==', i).get()
-			#        for doc in match:
-			#            item.append(doc.id)
-			#        self.db.collection(u'list').document(item).delete()
 		except google.cloud.exceptions.NotFound:
 			print('No match found for weight {}'.format(weight))
 
+	# Remove item by DTS
+	def removeItem(self, dts):
+		print('Removing {} from list'.format(dts))
+
+		try:
+			self.db.collection(u'list').document(dts).delete()
+		except google.cloud.exceptions.NotFound:
+			print(u'No such document!')
+
 	# Search Firebase for name
-	def findName(self, name):
+	def searchList(self, name):
 		print('Searching for name {}'.format(name))
 
 		dict = None
@@ -79,7 +89,7 @@ class Firebase:
 		print(dict)
 
 	# Search Firebase for weight
-	def findWeight(self, weight):
+	def searchList(self, weight):
 		print('Searching for weight {}'.format(weight))
 
 		dict = None
@@ -90,7 +100,7 @@ class Firebase:
 		print(dict)
 
 	# Search Firebase for timestamp
-	def findDTS(self, timestamp):
+	def searchList(self, timestamp):
 		print('Searching for timestamp {}'.format(timestamp))
 
 		match = self.db.collection(u'list').document(timestamp)
@@ -102,15 +112,15 @@ class Firebase:
 
 	# Return list
 	def getList(self):
-		dict = None
-		list = None
+		dic = {}
+		items = []
 		
 		docs = self.db.collection(u'list').get()
 		for doc in docs:
 			if doc.id != u'default':
-				dict = doc.to_dict()
-				list.append(dict['name'])
-		return list
+				dic = doc.to_dict()
+				items.append(dic['name'])
+		return items
 
 	# Print list
 	def printList(self):
@@ -133,14 +143,26 @@ class Firebase:
 		blob = self.bucket.blob(dts)
 		blob.upload_from_filename(filename=filename)
 
+	# Send list updated notification to app
+	def listUpdated(self):
+		print('List updated push notification')
+
+		message = 'The list has been updated'
+
+		result = self.pushService.notify_topic_subscribers(
+				topic_name = 'list',
+				message_title = 'List Updated',
+				message_body = message
+				)
+
 	# Send door warning notification to app
 	def doorWarning(self):
 		print('Door push notification')               
 
 		message = 'The door has been open for more than 2 minutes!'
 
-		result = self.pushService.notify_single_device(
-				registration_id = self.registration_id,
+		result = self.pushService.notify_topic_subscribers(
+				topic_name = 'door',
 				message_title = 'Door Warning',
 				message_body = message
 				)
@@ -161,7 +183,7 @@ class Firebase:
 	def powerWarning(self):
 		print('Power push notification')
 
-		message = 'Power has failed! Food Sense is now operating on battery power'
+		message = 'Power failure: Food Sense is now operating on battery power'
 
 		result = self.pushService.notify_topic_subscribers(
 				topic_name = 'power',

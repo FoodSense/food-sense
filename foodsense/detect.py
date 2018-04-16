@@ -104,12 +104,13 @@ class Detect:
 		self.response = request.execute()
 	
 	# Parse Vision API repsonse to find item match
-	def parseResponse(self, add=True):
+	def parseResponse(self, add=False):
 		print('Searching for item match')
 
 		#print(json.dumps(self.response, indent=4, sort_keys=True))
 
 		currList = self.fb.getList()
+		print('Current list: {}'.format(currList))
 
 		bestGuess = self.response['responses'][0]['webDetection']['bestGuessLabels'][0]['label']
 		print('Best guess label: {}'.format(bestGuess))
@@ -120,8 +121,20 @@ class Detect:
 				self.items.append(self.itemNames[i]) 
 				self.match = True
 
-		# If no items matched, assume best guess label is right
+		# If no specific items matched, assume best guess label is right
 		if self.match is False:
 			newItem = bestGuess.replace(' png', '')
 			self.items.append(newItem)
 		print('Items found: {}'.format(self.items))
+
+		if add:
+			print('Add items in list to firebase')
+		else: # if removing item(s)
+			# Match matched list with list in firebase
+			set1 = set(self.items)
+			set2 = set(currList)
+			unmatched = set1.symmetric_difference(set2)
+			print('Items not matched which are in firebase: {}'.format(unmatched))
+
+			for i in unmatched:
+				self.fb.removeItem(str(i))
