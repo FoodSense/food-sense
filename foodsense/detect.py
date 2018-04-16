@@ -52,7 +52,7 @@ class Detect:
 	def getImage(self):
 		print('Capturing image')
 		self.timestamp = time.time()
-		self.filename = '../data/images/' + str(self.timestamp) + '.png'
+		self.filename = '../images/' + str(self.timestamp) + '.png'
 
 		# Camera init and settings
 		with PiCamera() as camera:
@@ -72,7 +72,7 @@ class Detect:
 			camera.crop = (0.0, 0.0, 1.0, 1.0)
 			
 			# Turn on LEDs
-			GPIO.output(LED, True)
+			GPIO.output(self.LED, True)
 
 			# Begiin preview, pause for two seconds
 			camera.start_preview()
@@ -82,7 +82,7 @@ class Detect:
 			camera.capture(self.filename)
 		
 			# Turn off LEDs
-			GPIO.output(LED, False)
+			GPIO.output(self.LED, False)
 
 	# Detect using custom JSON request
 	def detectItem(self):
@@ -104,8 +104,10 @@ class Detect:
 		self.response = request.execute()
 	
 	# Parse Vision API repsonse to find item match
-	def parseResponse(self, add=False):
+	def parseResponse(self, add=True, weight=0):
 		print('Searching for item match')
+
+		self.items = []
 
 		#print(json.dumps(self.response, indent=4, sort_keys=True))
 
@@ -125,11 +127,17 @@ class Detect:
 		if self.match is False:
 			newItem = bestGuess.replace(' png', '')
 			self.items.append(newItem)
-		print('Items found: {}'.format(self.items))
+		print('Items matched: {}'.format(self.items))
 
-		if add:
+		numItems = len(self.items)
+
+		if add is True:
 			print('Add items in list to firebase')
-		else: # if removing item(s)
+			for i in range(numItems):
+				self.fb.addItem(str(self.items[i]), str(weight/numItems), str(self.timestamp))
+				
+		elif add is False:
+			print('Removing items from firebase')
 			# Match matched list with list in firebase
 			set1 = set(self.items)
 			set2 = set(currList)

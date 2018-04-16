@@ -20,40 +20,49 @@ def foodSense():
 	mon = Monitoring()
 	sc = Scale()
 
+	# Set scale calibration
+	sc.setReferenceUnit(-25.725)
+	sc.reset()
+	sc.tare()
+
 	### START DEBUG ###
-
-	det.timestamp = 'beer'
-	det.filename = '../images/' + det.timestamp + '.jpg'
-	det.detectItem()
-	det.parseResponse()
-
 	### END DEBUG ###
 
 	### MAIN LOOP ###
-	#while True:
-		#while mon.powerOn():
-			#while mon.doorClosed():
-				#if mon.checkTemp():
-					#fb.tempWarning()
-				#if mon.doorOpen():
-					#mon.startTimer()
-					#while mon.doorOpen():
-						#if mon.timerExceeded():
-							#fb.doorWarning()
-						#if mon.checkTemp():
-							#fb.tempWarning()
-					## weight, image, detect, parse, add/remove here
-				#else:
-					#pass
-			#else:
-				#print('Door must be closed on system start')
-		#else:
-			#fb.powerWarning()
-			#while mon.powerOn() is False:
-				#if mon.checkTemp():
-					#fb.tempWarning()
-	#else:
-		#pass
+	while True:
+		while mon.powerOn:
+			print('Power is on')
+			time.sleep(1)
+
+			while mon.doorClosed():
+				print('Door is closed')
+				time.sleep(1)
+
+				if mon.doorOpen():
+					print('Door was opened')
+
+					while mon.doorOpen():
+						print('Waiting for door to close')
+						time.sleep(1)
+					print('Door is closed again')
+
+					sc.getWeight()
+					det.getImage()
+					det.detectItem()
+
+					if sc.weight < sc.prevWeight:
+						det.parseResponse(True, sc.weight)
+					elif sc.weight > sc.prevWeight:
+						det.parseResponse(False)
+					else:
+						print('Error determining weight')
+			else:
+				print('Door must be closed on program startup')
+		else:
+			fb.powerWarning()
+			while mon.powerOn() is False:
+				if mon.checkTemp():
+					fb.tempWarning()
 	### END MAIN LOOP ###
 	
 # Make foodSense() the default entry point

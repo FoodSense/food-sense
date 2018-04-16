@@ -12,7 +12,8 @@ class Scale:
 		self.history = []
 		
 		# Weight value that will be used by storage class
-		self.weight = None
+		self.weight = 0
+		self.prevWeight = 0
 
 	def newMeasure(self):
 		value = self.source.getWeight()
@@ -46,11 +47,12 @@ class Scale:
 
 		[self.newMeasure() for i in range(samples or self.samples)]
 
-		# Get raw value from scale
-		value = self.getMeasure()
-		
-		# Round value to closest 0.5 g
-		self.weight = round((value * 2) / 2)
+		self.prevWeight = self.weight
+		self.weight = self.getMeasure()
+
+		if self.weight > -50.0 and self.weight < 50.0:
+			self.weight = 0.0
+
 
 	def tare(self, times=25):
 		self.source.tare(times)

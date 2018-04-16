@@ -18,7 +18,7 @@ class Monitoring:
 		self.SPI_DEVICE = 0
 		self.DOOR = DOOR
 		self.POWER = POWER
-		self.maxTemp = 4.4
+		self.maxTemp = 12.0
 		self.temp = None
 		self.time = None
 
@@ -36,8 +36,8 @@ class Monitoring:
 		value = self.mcp.read_adc(0)
 		self.temp = value / 10
 
-		print('Raw value: ' + str(value))
-		print('Temp: ' + str(self.temp) + 'C / ' + str(((9*self.temp)/5) + 32) + 'F')
+		#print('Raw value: ' + str(value))
+		#print('Temp: ' + str(self.temp) + 'C / ' + str(((9*self.temp)/5) + 32) + 'F')
 
 		if (self.temp >= self.maxTemp):
 			return True
@@ -46,11 +46,11 @@ class Monitoring:
 
 	# True if door is closed
 	def doorClosed(self):  
-		return GPIO.input(self.DOOR) is True
+		return GPIO.input(self.DOOR)
 
 	# True if door is open
 	def doorOpen(self):
-		return GPIO.input(self.DOOR) is False
+		return not GPIO.input(self.DOOR)
 
 	# Return value of power pin
 	def powerOn(self):
