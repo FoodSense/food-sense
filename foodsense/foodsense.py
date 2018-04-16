@@ -2,83 +2,60 @@ import sys
 import time
 
 try:
-    #from monitor import Monitor
-    #from scale import Scale
-    from storage import Storage 
-    from detect import Detect
+	from detect import Detect
+	from firebase import Firebase
+	from monitoring import Monitoring
+	from scale import Scale
 except ImportError:
-    print('Failed to import required Food Sense modules')
-    sys.exit()
+	print('Failed to import required Food Sense modules')
+	sys.exit(1)
 
 # Entrypoint
-def main():
-    print('Starting Food Sense')
+def foodSense():
+	print('Starting Food Sense')
 
-    # GPIO pins
-    CLK = 17
-    DATA = 22
-    DOOR = 5
-    LED = 27
-    POWER = 6
+	# Begin initializing necessary components
+	fb = Firebase()
+	det = Detect(fb)
+	mon = Monitoring()
+	sc = Scale()
 
-    # Begin initializing necessary components
-    print('Initializing system components')
-    try:
-        #monitor = Monitor(DOOR, POWER)
-        #scale = Scale(DATA, CLK)
-        #storage = Storage()
-        detect = Detect( LED)
-    except AttributeError:
-        print('Failed to initialize all system components')
-        sys.exit()
+	### START DEBUG ###
 
-    ### START DEBUG ###
-    detect.timestamp = 'cheese'
-    detect.filename = '../data/samples/' + detect.timestamp + '.jpg'
-    detect.detectItem()
-    detect.parseResponse()
+	det.timestamp = 'pop'
+	det.filename = '../images/' + det.timestamp + '.jpg'
+	det.detectItem()
+	det.parseResponse()
 
-    ### END DEBUG ###
+	### END DEBUG ###
 
-    # Main program loop
-#    while True:
-#        while monitor.powerOn():
-#            while monitor.doorClosed():
-#                if monitor.checkTemp():
-#                    storage.tempWarning()
-#                if monitor.doorOpen():
-#                    monitor.startTimer()
-#                    
-#                    while monitor.doorOpen():
-#                        if monitor.timerExceeded():
-#                            storage.doorWarning()
-#                        if monitor.checkTemp():
-#                            storage.tempWarning()
-#                    scale.getWeight()
-#                   
-#                    if scale.weight > 0:
-#                        detect.getImage()
-#                        detect.detectItem()
-#                        detect.parseResponse()
-#                        storage.addItem(
-#                                detect.item,
-#                                scale.weight, 
-#                                detect.timestamp)
-#                        storage.uploadImage(detect.timestamp, detect.filename)
-#                    elif scale.weight < 0:
-#                        storage.removeItem(scale.weight) 
-#                    else:
-#                        pass
-#                    sys.exit()
-#                else:
-#                    pass
-#            else:
-#                print('Door must be closed on system start')
-#        else:
-#            storage.powerWarning()
-#    else:
-#        pass
-
-# Call main()
+	### MAIN LOOP ###
+	#while True:
+		#while mon.powerOn():
+			#while mon.doorClosed():
+				#if mon.checkTemp():
+					#fb.tempWarning()
+				#if mon.doorOpen():
+					#mon.startTimer()
+					#while mon.doorOpen():
+						#if mon.timerExceeded():
+							#fb.doorWarning()
+						#if mon.checkTemp():
+							#fb.tempWarning()
+					## weight, image, detect, parse, add/remove here
+				#else:
+					#pass
+			#else:
+				#print('Door must be closed on system start')
+		#else:
+			#fb.powerWarning()
+			#while mon.powerOn() is False:
+				#if mon.checkTemp():
+					#fb.tempWarning()
+	#else:
+		#pass
+	### END MAIN LOOP ###
+	
+# Make foodSense() the default entry point
 if __name__ == '__main__':
-    main()
+	foodSense()
