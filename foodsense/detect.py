@@ -6,18 +6,20 @@ import time
 import sys
 
 try:
+    from storage import Storage
     from google.oauth2 import service_account
     from googleapiclient import discovery
-    from picamera import PiCamera
-    import RPi.GPIO as GPIO
+    #from picamera import PiCamera
+    #import RPi.GPIO as GPIO
 except ImportError:
     print('Failed to import required Detect class modules')
     sys.exit()
 
-class Detect:
+class Detect(Storage):
     def __init__(self, LED):
         print('Initializing Detect object')
-        
+        Storage.__init__(self)
+
         # Suppress logging errors
         logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
         
@@ -31,22 +33,21 @@ class Detect:
         self.client = discovery.build('vision', 'v1', credentials=self.credentials)
         
         # Private class members
-        self.itemNames = ['granny smith', 'apple', 'banana', 'broccoli', 'celery',
-                            'orange', 'onion', 'potato', 'tomato',
-                            'soda', 'beer', 'milk', 'cheese']
+        self.itemNames = [
+                'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 'tomato', 'tomatoes', 'celery', 
+                'cheese', 'ketchup', 'mustard', 'soda', 'pop',' cola', 'beer', 'milk', 'orange juice']
+
         self.LED = LED
         self.filename = None
         self.match = False
         self.response = None
-        
-        # Public class members
         self.timestamp = None
-        self.item = None
+        self.items = []
 
         # Set up LED pin
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setwarnings(False)
-        GPIO.setup(self.LED, GPIO.OUT)
+        #GPIO.setmode(GPIO.BCM)
+        #GPIO.setwarnings(False)
+        #GPIO.setup(self.LED, GPIO.OUT)
 
     # Use Pi Camera to capture an image; toggle LEDs
     def getImage(self):
@@ -71,7 +72,8 @@ class Detect:
             camera.vflip = False
             camera.crop = (0.0, 0.0, 1.0, 1.0)
             
-            # Turn on LEDs here
+            # Turn on LEDs
+            GPIO.output(LED, True)
 
             # Begiin preview, pause for two seconds
             camera.start_preview()
@@ -80,7 +82,8 @@ class Detect:
             # Capture image
             camera.capture(self.filename)
         
-            # Turn off LEDs here
+            # Turn off LEDs
+            GPIO.output(LED, False)
 
     # Detect using custom JSON request
     def detectItem(self):
@@ -94,52 +97,51 @@ class Detect:
                         'content': base64img.decode('UTF-8')
                     },
                     'features': [{
-                        'type': 'LABEL_DETECTION',
-                        'maxResults': 5
-                    },
-                    {
                         'type': 'WEB_DETECTION',
-                        'maxResults': 5
+                        'maxResults': 10
                     }]
                 }]
             })
         self.response = request.execute()
     
     # Parse Vision API repsonse to find item match
-    def parseResponse(self):
+    def parseResponse(self, add=True):
         print('Searching for item match')
 
-        print(json.dumps(self.response, indent=4, sort_keys=True))
-        print('')
+        #print(json.dumps(self.response, indent=4, sort_keys=True))
+        #print('')
+        bestGuess = self.response['responses'][0]['webDetection']['bestGuessLabels'][0]['label'] 
+        print('Best guess label: {}'.format(bestGuess))
 
-        #for i in range(5):
-        #    print(self.response['responses'][0]['labelAnnotations'][i]['description'])
-        #    print('')
-        #    print(self.response['responses'][0]['webDetection']['webEntities'][i]['description'])
-        #    print('')
+        for i in range(len(self.itemNames)):
+            if self.itemNames[i] in bestGuess:
+                self.items.append(self.itemNames[i]) 
+
+        print('Items found: {}'.format(self.items))
+        Storage.printList(self)
 
         # Find match in label annotations
-        for i in range(len(self.response['responses'][0]['labelAnnotations'])):
-            for j in range(len(self.itemNames)):
-                if self.itemNames[j] == self.response["responses"][0]['labelAnnotations'][i]['description']:
-                    self.match = True
-                    self.item = self.response["responses"][0]['labelAnnotations'][i]['description']
-                    break
-            else:
-                continue
-            break
+        #for i in range(len(self.response['responses'][0]['labelAnnotations'])):
+        #    for j in range(len(self.itemNames)):
+        #        if self.itemNames[j] == self.response["responses"][0]['labelAnnotations'][i]['description']:
+        #            self.match = True
+        #            self.item = self.response["responses"][0]['labelAnnotations'][i]['description']
+        #            break
+        #    else:
+        #        continue
+        #    break
 
         # If no match found, try web detection
-        if self.match is False:
-            for i in range(len(self.response['responses'][0]['webDetection']['webEntities'])):
-                for j in range(len(self.itemNames)):
-                    if self.itemNames[j] == self.response["responses"][0]['webDetection']['webEntities'][i]['description']:
-                        self.match = True
-                        self.item = self.response["responses"][0]['webDetection']['webentities'][i]['description']
-                        break
-                else:
-                    continue
-                break
+        #if self.match is False:
+        #    for i in range(len(self.response['responses'][0]['webDetection']['webEntities'])):
+        #        for j in range(len(self.itemNames)):
+        #            if self.itemNames[j] == self.response["responses"][0]['webDetection']['webEntities'][i]['description']:
+        #               self.match = True
+        #                self.item = self.response["responses"][0]['webDetection']['webentities'][i]['description']
+        #                break
+        #        else:
+        #            continue
+        #        break
 
         # If no match still found, try logo detection
         #if self.match is False:
@@ -148,9 +150,3 @@ class Detect:
         #            if self.itemNames[j] == self.response["responses"][0]['logoAnnotations'][i]['description']:
         #                self.match = True
         #                self.item = self.response["responses"][0]['logoAnnotations'][i]['description']
-
-        if self.match is False:
-            print('No match found')
-            sys.exit()
-        else:
-            print('Item found: ' + self.item)

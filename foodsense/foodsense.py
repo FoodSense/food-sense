@@ -2,11 +2,10 @@ import sys
 import time
 
 try:
-    import RPi.GPIO as GPIO
+    #from monitor import Monitor
+    #from scale import Scale
+    from storage import Storage 
     from detect import Detect
-    from monitor import Monitor
-    from scale import Scale
-    from storage import Storage
 except ImportError:
     print('Failed to import required Food Sense modules')
     sys.exit()
@@ -25,15 +24,19 @@ def main():
     # Begin initializing necessary components
     print('Initializing system components')
     try:
-        detect = Detect(LED)
-        storage = Storage()
-        monitor = Monitor(DOOR, POWER)
-        scale = Scale(DATA, CLK)
+        #monitor = Monitor(DOOR, POWER)
+        #scale = Scale(DATA, CLK)
+        #storage = Storage()
+        detect = Detect( LED)
     except AttributeError:
         print('Failed to initialize all system components')
         sys.exit()
 
     ### START DEBUG ###
+    detect.timestamp = 'cheese'
+    detect.filename = '../data/samples/' + detect.timestamp + '.jpg'
+    detect.detectItem()
+    detect.parseResponse()
 
     ### END DEBUG ###
 
