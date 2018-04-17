@@ -36,9 +36,12 @@ class Detect(Firebase):
 		self.filename = None
 		self.items = []
 		self.itemNames = [
-				'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 'tomato', 'tomatoes', 'celery', 
-				'cheese', 'ketchup', 'mustard', 'soda', 'pop', 'cola', 'beer', 'milk', 'orange juice'
+				'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 
+                'tomato', 'tomatoes', 'celery', 'cheese', 'ketchup', 'mustard', 
+                'soda', 'pop', 'cola', 'beer', 'founders all day ipa', 'water', 
+                'bottled water'
 				]
+
 		self.LED = LED
 		self.match = False
 		self.response = None
@@ -107,7 +110,7 @@ class Detect(Firebase):
 	# Parse Vision API repsonse to find items
     # This is most effective when only adding or removing
     # one item at a time, especially "known" items.
-	def parseResponse(self, add=True, weight=0):
+	def parseResponse(self, weight=0):
 		print('Searching for item match')
 		#print(json.dumps(self.response, indent=4, sort_keys=True))
 
