@@ -16,18 +16,18 @@ class Firebase:
 		print('Initializing Storage object')
 
 		# Authenticate with Firebase using AdminSDK service account
-		#self.cred = credentials.Certificate('/home/pi/food-sense/service-accounts/foodsense-firebase.json')
-		self.cred = credentials.Certificate('/home/derrick/food-sense/service-accounts/foodsense-firebase.json')
+		self.cred = credentials.Certificate(
+                '/home/pi/food-sense/service-accounts/foodsense-firebase.json'
+                )
+
 		firebase_admin.initialize_app(self.cred)
 		self.db = firestore.client()
 
 		# Connect to Firebase Storage bucket
 		self.bucket = storage.bucket('food-sense-199718.appspot.com')
-		#self.bucket = storage.bucket('avian-silicon-200216.appspot.com')
 
 		# Authenticate with FCM through PyFCM
 		self.apiKey = 'AAAAYDyGdIE:APA91bHW_WpPWEjG-GgxwszERAfIADupdxKiyzZjoI_O84j4Xv6XQnjXugRAC07b0wtWWC3A9S_7miYEHYs4T_R8SI0x6EK3McxmR7AJ-4UEARp9wgiCsv5K0Z57-yJqiELIj8ACflyY'
-		#self.apiKey = 'AAAAg0N7t5A:APA91bHBcaxSAnpfjLNeieXz_H1P3W1OskS7VsEXgcCXNao2NB0Iq2D9aG0KlOCLzh5_dRXLgBX_BaIX-2tC3Wny-cn3nOzbTXCjcWPkq9i3Fbi7GplYMst-Dmb6PGrflPE06FP0qVRs'
 		self.pushService = FCMNotification(api_key=self.apiKey)
 
 	# Add new item to Firebase
@@ -52,31 +52,29 @@ class Firebase:
 			self.db.collection(u'list').document(item).delete()
 		except google.cloud.exceptions.NotFound:
 			print('No match found for name {}'.format(name))
+    
+    # Add item to shopping list
+    def addShopping(self, name):
+        print('Adding {} to shopping list'.format(name))
 
-	## Remove item by weight
-	#def removeItem(self, weight):
-		#print('Removing item with weight {} from list'.format(weight))
+        data = { u'name': name }
+        self.db.collection(u'shopping_list').document(name).set(data)
 
-		#try:
-			#item = None
-			#match = self.db.collection(u'list').where(u'weight', u'==', weight).get()
-			#for doc in match:
-				#item = doc.id
-			#self.db.collection(u'list').document(item).delete()
-		#except google.cloud.exceptions.NotFound:
-			#print('No match found for weight {}'.format(weight))
+    # Remove item from shopping list
+    def removeShopping(self, name):
+        print('Removing {} from shopping list'.format(name))
 
-	## Remove item by DTS
-	#def removeItem(self, dts):
-		#print('Removing {} from list'.format(dts))
-
-		#try:
-			#self.db.collection(u'list').document(dts).delete()
-		#except google.cloud.exceptions.NotFound:
-			#print(u'No such document!')
+        try:
+            item = []
+            match = self.db.collection(u'shopping_list').where(u'name', u'==', name).get()
+            for doc in match:
+                item = doc.id
+            self.db.collection(u'shopping_list').document(item).delete()
+        except google.cloud.exceptions.NotFound:
+            print('No match found for {}'.format(name))
 
 	# Search Firebase for name
-	def searchList(self, name):
+	def searchName(self, name):
 		print('Searching for name {}'.format(name))
 
 		dict = None
@@ -87,7 +85,7 @@ class Firebase:
 		print(dict)
 
 	# Search Firebase for weight
-	def searchList(self, weight):
+	def searchWeight(self, weight):
 		print('Searching for weight {}'.format(weight))
 
 		dict = None
@@ -98,7 +96,7 @@ class Firebase:
 		print(dict)
 
 	# Search Firebase for timestamp
-	def searchList(self, timestamp):
+	def searchTimestamp(self, timestamp):
 		print('Searching for timestamp {}'.format(timestamp))
 
 		match = self.db.collection(u'list').document(timestamp)
@@ -120,6 +118,18 @@ class Firebase:
 				items.append(dic['name'])
 		return items
 
+	# Return shopping list
+	def getShopping(self):
+		dic = {}
+		items = []
+		
+		docs = self.db.collection(u'shopping_list').get()
+		for doc in docs:
+			if doc.id != u'default':
+				dic = doc.to_dict()
+				items.append(dic['name'])
+		return items
+
 	# Print list
 	def printList(self):
 		print('Printing list')
@@ -132,13 +142,22 @@ class Firebase:
 				print(u'{}'.format(dict['name']))
 
 
+    # Print shopping list
+    def printShopping(self):
+        print('Printin shopping list')
+        
+     	dict = None
+		docs = self.db.collection(u'shopping_list').get()
+		for doc in docs:
+			if doc.id != u'default':
+				dict = doc.to_dict()
+				print(u'{}'.format(dict['name']))
+
 	# Upload image to Storage
-	def uploadImage(self, timestamp, filename):
+	def uploadImage(self, filename):
 		print('Uploading image to Firebase Storage')
 
-		dts = str(timestamp)
-
-		blob = self.bucket.blob(dts)
+		blob = self.bucket.blob('contents')
 		blob.upload_from_filename(filename=filename)
 
 	# Send list updated notification to app

@@ -28,7 +28,6 @@ class Detect(Firebase):
 		# Cloud Vision authentication
 		self.scopes = ['https://www.googleapis.com/auth/cloud-vision']
 		self.serviceAccount = '/home/pi/food-sense/service-accounts/foodsense-googlecloud.json'
-		#self.serviceAccount = '/home/derrick/food-sense/service-accounts/test-visionapi.json'
 		self.credentials = service_account.Credentials.from_service_account_file(
 			self.serviceAccount, scopes=self.scopes)
 		self.client = discovery.build('vision', 'v1', credentials=self.credentials)
@@ -132,9 +131,9 @@ class Detect(Firebase):
 
 		# If no specific item(s) matched, assume best guess label is right
         # This could cause unexpected items, like walls, to be added to list
-		if self.match is False:
-			newItem = bestGuess.replace(' png', '')
-			self.items.append(newItem)
+		#if self.match is False:
+		#	newItem = bestGuess.replace(' png', '')
+		#	self.items.append(newItem)
 		print('Item(s) found: {}'.format(self.items))
 		
         # Determine what items in list are not in response
@@ -146,8 +145,13 @@ class Detect(Firebase):
         # Remove all items that were not found in response
         for i in unmatched:
             Firebase.removeItem(str(i))
+            Firebase.addShopping(str(i))
 
         # Add all items that were found in response
         numItems = len(self.items)
         for i in range(numItems):
 		    Firebase.addItem(str(self.items[i]), str(weight/numItems), str(self.timestamp+=i))
+            Firebase.removeShopping(str(self.items[i]))
+
+        # Upload latest image to Firebase Storage
+        Firebase.uploadImage(self.filename)
