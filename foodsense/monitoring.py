@@ -2,6 +2,7 @@ import sys
 import time
 
 try:
+    import firebase as Firebase
 	import RPi.GPIO as GPIO
 	import Adafruit_GPIO.SPI as SPI
 	import Adafruit_MCP3008
@@ -9,10 +10,13 @@ except ImportError:
 	print('Failed to import all necessary Monitor packages')
 	sys.exit()
 
-class Monitoring:
+class Monitoring(Firebase):
 	def __init__(self, DOOR=5, POWER=6):
 		print('Initializing System Monitoring object')
-			   
+
+        # Initialize Firebase object as base of Monitoring
+        Firebase.__init__(self)
+
 		# Member variables
 		self.SPI_PORT = 0
 		self.SPI_DEVICE = 0
@@ -39,10 +43,8 @@ class Monitoring:
 		#print('Raw value: ' + str(value))
 		#print('Temp: ' + str(self.temp) + 'C / ' + str(((9*self.temp)/5) + 32) + 'F')
 
-		if (self.temp >= self.maxTemp):
-			return True
-		else:
-			return False
+        if self.temp > self.maxTemp:
+            Firebase.tempWarning()
 
 	# True if door is closed
 	def doorClosed(self):  
@@ -52,19 +54,24 @@ class Monitoring:
 	def doorOpen(self):
 		return not GPIO.input(self.DOOR)
 
-	# Return value of power pin
+	# Check that power is on
 	def powerOn(self):
-		return GPIO.input(self.POWER)
+        if GPIO.input(self.POWER):
+            return True
+        else:
+            Firebase.powerWarning()
+            return False
 
-	### TIMERS ###
+    # Wait for power to be restored
+    def powerSave(self):
+        while not GPIO.input(self.POWER):
+            self.checkTemp()
 
 	# Get system time
 	def startTimer(self):
 		self.time = time.time() 
 
 	# Check if timer has been exceeded
-	def timerExceeded(self):
-		if (time.time() - self.time) >= 10.0:
-			return True
-		else:
-			return False
+	def checkTimer(self):
+		if (time.time() - self.time) >= 120.0:
+			Firebase.doorWarning()

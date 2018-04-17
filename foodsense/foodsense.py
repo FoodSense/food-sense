@@ -3,7 +3,6 @@ import time
 
 try:
 	from detect import Detect
-	from firebase import Firebase
 	from monitoring import Monitoring
 	from scale import Scale
 except ImportError:
@@ -14,55 +13,52 @@ except ImportError:
 def foodSense():
 	print('Starting Food Sense')
 
-	# Begin initializing necessary components
-	fb = Firebase()
-	det = Detect(fb)
-	mon = Monitoring()
-	sc = Scale()
+	# Begin initializing necessary components)
+	detect = Detect()
+    monitor = Monitoring()
+	scale = Scale()
 
 	# Set scale calibration
-	sc.setReferenceUnit(-25.725)
-	sc.reset()
-	sc.tare()
+	scale.setReferenceUnit(-25.725)
+	scale.reset()
+	scale.tare()
 
 	### START DEBUG ###
-	### END DEBUG ###
+    ### END DEBUG ###
 
 	### MAIN LOOP ###
 	while True:
-		while mon.powerOn:
+		while monitor.powerOn:
 			print('Power is on')
 			time.sleep(1)
 
-			while mon.doorClosed():
+			while monitor.doorClosed():
 				print('Door is closed')
-				time.sleep(1)
+                monitor.checkTemp():
+                time.sleep(1)
 
-				if mon.doorOpen():
+                if monitor.doorOpen():
 					print('Door was opened')
+                    monitor.startTimer()
 
-					while mon.doorOpen():
+					while monitor.doorOpen():
 						print('Waiting for door to close')
-						time.sleep(1)
-					print('Door is closed again')
+                        monitor.checkTimer()
+                        monitor.checkTemp()
+                        time.sleep(1)
+                    else:
+                        print('Door was closed')
 
-					sc.getWeight()
-					det.getImage()
-					det.detectItem()
-
-					if sc.weight < sc.prevWeight:
-						det.parseResponse(True, sc.weight)
-					elif sc.weight > sc.prevWeight:
-						det.parseResponse(False)
-					else:
-						print('Error determining weight')
-			else:
+					    scale.getWeight()
+					    detect.getImage()
+					    detect.detectItem()
+						detect.parseResponse(scale.weight)
+            else:
 				print('Door must be closed on program startup')
-		else:
-			fb.powerWarning()
-			while mon.powerOn() is False:
-				if mon.checkTemp():
-					fb.tempWarning()
+        else:
+            monitor.powerSave()
+    else:
+        pass
 	### END MAIN LOOP ###
 	
 # Make foodSense() the default entry point

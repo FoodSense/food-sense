@@ -15,6 +15,12 @@ class Scale:
 		self.weight = 0
 		self.prevWeight = 0
 
+    def itemAdded(self):
+        if self.weight < self.prevWeight:
+            return True
+        else:
+            return False
+    
 	def newMeasure(self):
 		value = self.source.getWeight()
 		self.history.append(value)

@@ -6,7 +6,8 @@ import time
 import sys
 
 try:
-	from google.oauth2 import service_account
+	from firebase import Firebase
+    from google.oauth2 import service_account
 	from googleapiclient import discovery
 	from picamera import PiCamera
 	import RPi.GPIO as GPIO
@@ -14,12 +15,12 @@ except ImportError:
 	print('Failed to import required Detect class modules')
 	sys.exit()
 
-class Detect:
-	def __init__(self, firebase, LED=27):
+class Detect(Firebase):
+	def __init__(self, LED=27):
 		print('Initializing Detect object')
 
-		# Reference to Firebase class
-		self.fb = firebase
+        # Initialize Firebase object as base of Detect
+        Firebase.__init__(self)
 
 		# Suppress logging errors
 		logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
@@ -103,46 +104,47 @@ class Detect:
 			})
 		self.response = request.execute()
 	
-	# Parse Vision API repsonse to find item match
+	# Parse Vision API repsonse to find items
+    # This is most effective when only adding or removing
+    # one item at a time, especially "known" items.
 	def parseResponse(self, add=True, weight=0):
 		print('Searching for item match')
-
-		self.items = []
-
 		#print(json.dumps(self.response, indent=4, sort_keys=True))
 
-		currList = self.fb.getList()
+        self.items = []     # Clear item list
+
+        # Get current list of items from Firebase
+		currList = Firebase.getList()
 		print('Current list: {}'.format(currList))
 
+        # Get best guess label from response
 		bestGuess = self.response['responses'][0]['webDetection']['bestGuessLabels'][0]['label']
-		print('Best guess label: {}'.format(bestGuess))
+		print('Best guess: {}'.format(bestGuess))
 
-		# Match each "known" item with item(s) in response
+		# Match each "known" item(s) with item(s) in response
 		for i in range(len(self.itemNames)):
 			if self.itemNames[i] in bestGuess:
 				self.items.append(self.itemNames[i]) 
 				self.match = True
 
-		# If no specific items matched, assume best guess label is right
+		# If no specific item(s) matched, assume best guess label is right
+        # This could cause unexpected items, like walls, to be added to list
 		if self.match is False:
 			newItem = bestGuess.replace(' png', '')
 			self.items.append(newItem)
-		print('Items matched: {}'.format(self.items))
+		print('Item(s) found: {}'.format(self.items))
+		
+        # Determine what items in list are not in response
+		itemSet = set(self.items)
+		listSet = set(currList)
+		unmatched = itemSet.symmetric_difference(listSet)
+		print('Items in list that were not found in image: {}'.format(unmatched))
+		
+        # Remove all items that were not found in response
+        for i in unmatched:
+            Firebase.removeItem(str(i))
 
-		numItems = len(self.items)
-
-		if add is True:
-			print('Add items in list to firebase')
-			for i in range(numItems):
-				self.fb.addItem(str(self.items[i]), str(weight/numItems), str(self.timestamp))
-				
-		elif add is False:
-			print('Removing items from firebase')
-			# Match matched list with list in firebase
-			set1 = set(self.items)
-			set2 = set(currList)
-			unmatched = set1.symmetric_difference(set2)
-			print('Items not matched which are in firebase: {}'.format(unmatched))
-
-			for i in unmatched:
-				self.fb.removeItem(str(i))
+        # Add all items that were found in response
+        numItems = len(self.items)
+        for i in range(numItems):
+		    Firebase.addItem(str(self.items[i]), str(weight/numItems), str(self.timestamp+=i))

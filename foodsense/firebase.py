@@ -31,13 +31,11 @@ class Firebase:
 		self.pushService = FCMNotification(api_key=self.apiKey)
 
 	# Add new item to Firebase
-	def addItem(self, item, weight, timestamp):
+	def addItem(self, name, weight, dts):
 		print('Adding {} to list'.format(item))
 
-		dts = str(timestamp)
-
 		# Data fields for key
-		data = { u'name': item, u'weight': weight, u'dts': dts }
+		data = { u'name': name, u'weight': weight, u'dts': dts }
 
 		# Push 'key: {data}' to 'list' collection
 		self.db.collection(u'list').document(dts).set(data)
