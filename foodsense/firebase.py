@@ -16,8 +16,8 @@ class Firebase:
 		print('Initializing Storage object')
 
 		# Authenticate with Firebase using AdminSDK service account
-		self.cred = credentials.Certificate('/home/pi/food-sense/service-accounts/foodsense-firebase.json')
-		#self.cred = credentials.Certificate('/home/derrick/food-sense/service-accounts/test-firebase.json')
+		#self.cred = credentials.Certificate('/home/pi/food-sense/service-accounts/foodsense-firebase.json')
+		self.cred = credentials.Certificate('/home/derrick/food-sense/service-accounts/foodsense-firebase.json')
 		firebase_admin.initialize_app(self.cred)
 		self.db = firestore.client()
 
