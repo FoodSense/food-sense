@@ -11,7 +11,7 @@ except ImportError:
     print('Failed to import all necessary packages for Storage class')
     sys.exit()
 
-class Firebase:
+class Firebase(object):
     def __init__(self):
         print('Initializing Storage object')
 
@@ -21,7 +21,7 @@ class Firebase:
         #        )
 
         self.cred = credentials.Certificate(
-                'home/derrick/food-sense/service-accounts/test-firebase.json'
+                '/home/derrick/food-sense/service-accounts/test-firebase.json'
                 )
 
         firebase_admin.initialize_app(self.cred)

@@ -6,7 +6,6 @@ import time
 import sys
 
 try:
-    from firebase import Firebase
     from google.oauth2 import service_account
     from googleapiclient import discovery
     #from picamera import PiCamera
@@ -15,12 +14,12 @@ except ImportError:
     print('Failed to import required Detect class modules')
     sys.exit()
 
-class Detect(Firebase):
-    def __init__(self, LED=27):
+class Detect:
+    def __init__(self, firebase, LED=27):
         print('Initializing Detect object')
 
         # Initialize Firebase object as base of Detect
-        Firebase.__init__(self)
+        self.fb = firebase
 
         # Suppress logging errors
         logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
@@ -117,7 +116,7 @@ class Detect(Firebase):
         self.items = []     # Clear item list
 
         # Get current list of items from Firebase
-        currList = Firebase.getList()
+        currList = self.fb.getList()
         print('Current list: {}'.format(currList))
 
         # Get best guess label from response
@@ -145,14 +144,14 @@ class Detect(Firebase):
         
         # Remove all items that were not found in response
         for i in unmatched:
-            Firebase.removeItem(str(i))
-            Firebase.addShopping(str(i))
+            self.fb.removeItem(str(i))
+            self.fb.addShopping(str(i))
 
         # Add all items that were found in response
         numItems = len(self.items)
         for i in range(numItems):
-            Firebase.addItem(str(self.items[i]), str(weight/numItems), str(self.timestamp+=i))
-            Firebase.removeShopping(str(self.items[i]))
+            self.fb.addItem(str(self.items[i]), str(weight/numItems), str(self.timestamp + i))
+            self.fb.removeShopping(str(self.items[i]))
 
         # Upload latest image to Firebase Storage
-        Firebase.uploadImage(self.filename)
+        self.fb.uploadImage(self.filename)

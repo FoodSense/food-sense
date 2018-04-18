@@ -34,7 +34,7 @@ def foodSense():
 
             while monitor.doorClosed():
                 print('Door is closed')
-                monitor.checkTemp():
+                monitor.checkTemp()
                 time.sleep(1)
 
                 if monitor.doorOpen():
