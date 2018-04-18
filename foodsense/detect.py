@@ -6,86 +6,87 @@ import time
 import sys
 
 try:
-	from firebase import Firebase
+    from firebase import Firebase
     from google.oauth2 import service_account
-	from googleapiclient import discovery
-	from picamera import PiCamera
-	import RPi.GPIO as GPIO
+    from googleapiclient import discovery
+    #from picamera import PiCamera
+    #import RPi.GPIO as GPIO
 except ImportError:
 	print('Failed to import required Detect class modules')
 	sys.exit()
 
 class Detect(Firebase):
-	def __init__(self, LED=27):
-		print('Initializing Detect object')
+    def __init__(self, LED=27):
+        print('Initializing Detect object')
 
         # Initialize Firebase object as base of Detect
         Firebase.__init__(self)
 
-		# Suppress logging errors
-		logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
-		
-		# Cloud Vision authentication
-		self.scopes = ['https://www.googleapis.com/auth/cloud-vision']
-		self.serviceAccount = '/home/pi/food-sense/service-accounts/foodsense-googlecloud.json'
-		self.credentials = service_account.Credentials.from_service_account_file(
-			self.serviceAccount, scopes=self.scopes)
-		self.client = discovery.build('vision', 'v1', credentials=self.credentials)
+        # Suppress logging errors
+        logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
 
-		self.filename = None
-		self.items = []
-		self.itemNames = [
+		# Cloud Vision authentication
+        self.scopes = ['https://www.googleapis.com/auth/cloud-vision']
+        #self.serviceAccount = '/home/pi/food-sense/service-accounts/foodsense-googlecloud.json'
+        self.serviceAccount = '/home/derrick/food-sense/service-accounts/test-googlecloud.json'
+        self.credentials = service_account.Credentials.from_service_account_file(
+            self.serviceAccount, scopes=self.scopes)
+        self.client = discovery.build('vision', 'v1', credentials=self.credentials)
+
+        self.filename = None
+        self.items = []
+        self.itemNames = [
 				'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 
                 'tomato', 'tomatoes', 'celery', 'cheese', 'ketchup', 'mustard', 
                 'soda', 'pop', 'cola', 'beer', 'founders all day ipa', 'water', 
                 'bottled water'
 				]
 
-		self.LED = LED
-		self.match = False
-		self.response = None
-		self.timestamp = None
+        self.LED = LED
+        self.match = False
+        self.response = None
+        self.timestamp = None
 
 		# Set up LED pin
-		GPIO.setwarnings(False)
-		GPIO.setmode(GPIO.BCM)
-		GPIO.setup(self.LED, GPIO.OUT)
+		#GPIO.setwarnings(False)
+		#GPIO.setmode(GPIO.BCM)
+		#GPIO.setup(self.LED, GPIO.OUT)
 
 	# Use Pi Camera to capture an image; toggle LEDs
-	def getImage(self):
-		print('Capturing image')
-		self.timestamp = time.time()
-		self.filename = '../images/' + str(self.timestamp) + '.png'
+    def getImage(self):
+        print('Capturing image')
+	    self.timestamp = time.time()
+        self.filename = '../images/' + str(self.timestamp) + '.png'
 
-		# Camera init and settings
-		with PiCamera() as camera:
-			camera.sharpness = 0
-			camera.contrast = 0
-			camera.brightness = 50
-			camera.saturation = 0
-			camera.ISO = 0
-			camera.exposure_compensation = True
-			camera.exposure_mode = 'auto'
-			camera.awb_mode = 'auto'
-			camera.image_effect = 'none'
-			camera.color_effects = None
-			camera.rotation = 0
-			camera.hflip = False
-			camera.vflip = False
-			camera.crop = (0.0, 0.0, 1.0, 1.0)
+        # Camera init and settings
+        with PiCamera() as camera:
+            camera.sharpness = 0
+            camera.contrast = 0
+            camera.brightness = 50
+            camera.saturation = 0
+            camera.ISO = 0
+            camera.exposure_compensation = True
+            camera.exposure_mode = 'auto'
+            camera.awb_mode = 'auto'
+            camera.image_effect = 'none'
+            camera.color_effects = None
+            camera.rotation = 0
+            camera.hflip = False
+            camera.vflip = False
+            camera.crop = (0.0, 0.0, 1.0, 1.0)
 			
 			# Turn on LEDs
-			GPIO.output(self.LED, True)
+            GPIO.output(self.LED, True)
 
 			# Begiin preview, pause for two seconds
-			camera.start_preview()
-			time.sleep(1.5)
+            camera.start_preview()
+            time.sleep(1.5)
 
 			# Capture image
-			camera.capture(self.filename)
+            camera.capture(self.filename)
 		
 			# Turn off LEDs
-			GPIO.output(self.LED, False)
+            GPIO.output(self.LED, False)
 
 	# Detect using custom JSON request
 	def detectItem(self):

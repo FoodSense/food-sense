@@ -3,9 +3,9 @@ import time
 
 try:
     import firebase as Firebase
-	import RPi.GPIO as GPIO
-	import Adafruit_GPIO.SPI as SPI
-	import Adafruit_MCP3008
+	#import RPi.GPIO as GPIO
+	#import Adafruit_GPIO.SPI as SPI
+	#import Adafruit_MCP3008
 except ImportError:
 	print('Failed to import all necessary Monitor packages')
 	sys.exit()
@@ -27,18 +27,17 @@ class Monitoring(Firebase):
 		self.time = None
 
 		# Setup GPIO
-		GPIO.setwarnings(False)
-		GPIO.setmode(GPIO.BCM)
-		GPIO.setup(self.DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-		GPIO.setup(self.POWER, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+		#GPIO.setwarnings(False)
+		#GPIO.setmode(GPIO.BCM)
+		#GPIO.setup(self.DOOR, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+		#GPIO.setup(self.POWER, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 		# Initialize MCP3004 ADC object
-		self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(self.SPI_PORT, self.SPI_DEVICE))
+		#self.mcp = Adafruit_MCP3008.MCP3008(spi=SPI.SpiDev(self.SPI_PORT, self.SPI_DEVICE))
 
 	# Return value from temp sensor adc
 	def checkTemp(self):
-		value = self.mcp.read_adc(0)
-		self.temp = value / 10
+		self.temp = self.mcp.read_adc(0) / 10
 
 		#print('Raw value: ' + str(value))
 		#print('Temp: ' + str(self.temp) + 'C / ' + str(((9*self.temp)/5) + 32) + 'F')
