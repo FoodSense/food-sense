@@ -28,7 +28,7 @@ class Monitoring:
         self.initTempNotify = False
 
         # Max value constants
-        self.maxTemp = 12.0
+        self.maxTemp = 10.0
         self.maxDoorTime = 120.0
         self.maxPowerTime = 120.0
         self.maxTempTime = 120.0
@@ -72,7 +72,7 @@ class Monitoring:
 
     # True if door is open
     def doorOpen(self):
-        return not GPIO.input(self.DOOR)
+        return not self.doorClosed()
 
     # Check that power is on
     def powerOn(self):
@@ -117,5 +117,5 @@ class Monitoring:
 
     # Check if temp notification timer has been exceeded
     def checkTempTimer(self):
-        if (time.time() - self.doorTime) >= self.maxTempTime:
+        if (time.time() - self.tempTime) >= self.maxTempTime:
             self.fb.tempWarning()

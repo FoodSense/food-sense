@@ -131,13 +131,13 @@ class Detect:
         #if self.match is False:
         #   newItem = bestGuess.replace(' png', '')
         #   self.items.append(newItem)
-        print('Item(s) found: {}'.format(self.items))
+        print('Item(s) matched: {}'.format(self.items))
         
         # Determine what items in list are not in response
         itemSet = set(self.items)
         listSet = set(currList)
         unmatched = itemSet.symmetric_difference(listSet)
-        print('Items in list that were not found in image: {}'.format(unmatched))
+        print('Items in list that were not matched: {}'.format(unmatched))
         
         # Remove all items that were not found in response
         for i in unmatched:

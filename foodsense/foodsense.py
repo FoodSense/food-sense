@@ -33,7 +33,7 @@ def foodSense():
         while monitor.powerOn:
             print('Power is on')
             time.sleep(1)
-
+            
             while monitor.doorClosed():
                 print('Door is closed')
                 monitor.checkTemp()
@@ -41,20 +41,22 @@ def foodSense():
 
                 if monitor.doorOpen():
                     print('Door was opened')
-                    monitor.startTimer()
-
+                    monitor.startDoorTimer()
+                    
                     while monitor.doorOpen():
                         print('Waiting for door to close')
-                        monitor.checkTimer()
+                        monitor.checkDoorTimer()
                         monitor.checkTemp()
                         time.sleep(1)
                     else:
                         print('Door was closed')
 
                         scale.getWeight()
-                        #detect.getImage()
-                        #detect.detectItem()
-                        #detect.parseResponse(scale.weight)
+                        detect.getImage()
+                        detect.detectItem()
+                        detect.parseResponse(scale.weight)
+                else:
+                    pass
             else:
                 print('Door must be closed on program startup')
         else:

@@ -32,7 +32,7 @@ class Firebase:
 
     # Add new item to Firebase
     def addItem(self, name, weight, dts):
-        print('Adding {} to list'.format(item))
+        print('Adding {} to firelist'.format(name))
 
         # Data fields for key
         data = { u'name': name, u'weight': weight, u'dts': dts }
