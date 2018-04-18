@@ -52,9 +52,9 @@ def foodSense():
                         print('Door was closed')
 
                         scale.getWeight()
-                        detect.getImage()
-                        detect.detectItem()
-                        detect.parseResponse(scale.weight)
+                        #detect.getImage()
+                        #detect.detectItem()
+                        #detect.parseResponse(scale.weight)
             else:
                 print('Door must be closed on program startup')
         else:

@@ -16,14 +16,30 @@ class Monitoring:
         # Initialize Firebase object as base of Monitoring
         self.fb = firebase
         
-        # Member variables
+        # GPIO Pins
         self.SPI_PORT = 0
         self.SPI_DEVICE = 0
         self.DOOR = DOOR
         self.POWER = POWER
+
+        # Flags for notification frequency
+        self.initDoorNotify = False
+        self.initPowerNotify = False
+        self.initTempNotify = False
+
+        # Max value constants
         self.maxTemp = 12.0
+        self.maxDoorTime = 120.0
+        self.maxPowerTime = 120.0
+        self.maxTempTime = 120.0
+
+        # Notification timers
+        self.doorTime = None
+        self.powerTime = None
+        self.tempTime = None
+
+        # Temperature
         self.temp = None
-        self.time = None
 
         # Setup GPIO
         GPIO.setwarnings(False)
@@ -39,7 +55,16 @@ class Monitoring:
         self.temp = self.mcp.read_adc(0) / 10
 
         if self.temp > self.maxTemp:
-            self.fb.tempWarning()
+            if self.initTempNotify is False:
+                self.fb.tempWarning()
+                self.startTempTimer()
+                self.initTempNotify = True
+            else:
+                self.checkTempTimer()
+        else:
+            self.initTempNotify = False
+
+        print('Temp: {}C'.format(self.temp))
 
     # True if door is closed
     def doorClosed(self):  
@@ -52,9 +77,15 @@ class Monitoring:
     # Check that power is on
     def powerOn(self):
         if GPIO.input(self.POWER):
+            self.initPowerNotify = False
             return True
         else:
-            self.fb.powerWarning()
+            if self.initPowerNotify is False:
+                self.fb.powerWarning()
+                self.startPowerTimer()
+                self.initPowerNotify = True
+            else:
+                self.checkPowerTimer()
             return False
 
     # Wait for power to be restored
@@ -63,10 +94,28 @@ class Monitoring:
             self.checkTemp()
 
     # Get system time
-    def startTimer(self):
-        self.time = time.time() 
+    def startDoorTimer(self):
+        self.doorTime = time.time() 
 
-    # Check if timer has been exceeded
-    def checkTimer(self):
-        if (time.time() - self.time) >= 120.0:
+    # Get system time
+    def startPowerTimer(self):
+        self.powerTime = time.time()
+
+    # Get system time
+    def startTempTimer(self):
+        self.tempTime = time.time()
+
+    # Check if door notification timer has been exceeded
+    def checkDoorTimer(self):
+        if (time.time() - self.doorTime) >= self.maxDoorTime:
             self.fb.doorWarning()
+
+    # Check if power notification timer has been exceeded
+    def checkPowerTimer(self):
+        if (time.time() - self.powerTime) >= self.maxPowerTime:
+            self.fb.powerWarning()
+
+    # Check if temp notification timer has been exceeded
+    def checkTempTimer(self):
+        if (time.time() - self.doorTime) >= self.maxTempTime:
+            self.fb.tempWarning()

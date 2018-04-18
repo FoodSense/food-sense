@@ -59,6 +59,8 @@ class Scale:
         if self.weight > -50.0 and self.weight < 50.0:
             self.weight = 0.0
 
+        print('Weight: {}'.format(self.weight))
+
 
     def tare(self, times=25):
         self.source.tare(times)
