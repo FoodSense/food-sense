@@ -64,7 +64,3 @@ def foodSense():
     else:
         pass
     ### END MAIN LOOP ###
-    
-# Make foodSense() the default entry point
-if __name__ == '__main__':
-    foodSense()
