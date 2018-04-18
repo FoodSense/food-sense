@@ -1,4 +1,5 @@
 import base64
+import json
 import logging
 import time
 import sys
@@ -10,7 +11,7 @@ try:
     import RPi.GPIO as GPIO
 except ImportError:
     print('Failed to import required Detect class modules')
-    sys.exit()
+    sys.exit(1)
 
 class Detect:
     def __init__(self, firebase, LED=27):
@@ -57,15 +58,16 @@ class Detect:
         # Camera init and settings
         with PiCamera() as camera:
             camera.sharpness = 0
-            camera.contrast = 0
+            camera.contrast = 25
             camera.brightness = 50
             camera.saturation = 0
             camera.ISO = 0
             camera.exposure_compensation = True
-            camera.exposure_mode = 'auto'
-            camera.awb_mode = 'auto'
-            camera.image_effect = 'none'
+            camera.exposure_mode = 'backlight'
+            camera.awb_mode = 'fluorescent'
+            camera.image_effect = 'colorbalance'
             camera.color_effects = None
+            camera.drc_strength = 'off'
             camera.rotation = 0
             camera.hflip = False
             camera.vflip = False

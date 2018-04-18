@@ -7,7 +7,7 @@ try:
     import Adafruit_MCP3008
 except ImportError:
     print('Failed to import all necessary Monitor packages')
-    sys.exit()
+    sys.exit(1)
 
 class Monitoring:
     def __init__(self, firebase, DOOR=5, POWER=6):

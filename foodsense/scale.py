@@ -1,7 +1,12 @@
 #!/usr/bin/python3
 import statistics
-from hx711 import HX711
+import sys
 
+try:
+    from hx711 import HX711
+except ImportError:
+    print('Error importing HX711 module')
+    sys.exit(1)
 class Scale:
     def __init__(self, dout=22, pd_sck=17, source=None, samples=20, spikes=4, sleep=0.1):
 

@@ -9,7 +9,7 @@ try:
     from pyfcm import FCMNotification
 except ImportError:
     print('Failed to import all necessary packages for Storage class')
-    sys.exit()
+    sys.exit(1)
 
 class Firebase:
     def __init__(self):
