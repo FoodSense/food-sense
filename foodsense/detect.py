@@ -1,6 +1,4 @@
 import base64
-import io
-import json
 import logging
 import time
 import sys
@@ -8,8 +6,8 @@ import sys
 try:
     from google.oauth2 import service_account
     from googleapiclient import discovery
-    #from picamera import PiCamera
-    #import RPi.GPIO as GPIO
+    from picamera import PiCamera
+    import RPi.GPIO as GPIO
 except ImportError:
     print('Failed to import required Detect class modules')
     sys.exit()
@@ -26,8 +24,7 @@ class Detect:
 
         # Cloud Vision authentication
         self.scopes = ['https://www.googleapis.com/auth/cloud-vision']
-        #self.serviceAccount = '/home/pi/food-sense/service-accounts/foodsense-googlecloud.json'
-        self.serviceAccount = '/home/derrick/food-sense/service-accounts/test-googlecloud.json'
+        self.serviceAccount = '/home/pi/food-sense/service-accounts/foodsense-googlecloud.json'
         self.credentials = service_account.Credentials.from_service_account_file(
             self.serviceAccount, scopes=self.scopes)
         self.client = discovery.build('vision', 'v1', credentials=self.credentials)
@@ -47,9 +44,9 @@ class Detect:
         self.timestamp = None
 
         # Set up LED pin
-        #GPIO.setwarnings(False)
-        #GPIO.setmode(GPIO.BCM)
-        #GPIO.setup(self.LED, GPIO.OUT)
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.LED, GPIO.OUT)
 
     # Use Pi Camera to capture an image; toggle LEDs
     def getImage(self):

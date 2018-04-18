@@ -2,6 +2,7 @@ import sys
 import time
 
 try:
+    from firebase import Firebase
     from detect import Detect
     from monitoring import Monitoring
     from scale import Scale
@@ -14,8 +15,9 @@ def foodSense():
     print('Starting Food Sense')
 
     # Begin initializing necessary components)
-    detect = Detect()
-    monitor = Monitoring()
+    fb = Firebase()
+    detect = Detect(fb)
+    monitor = Monitoring(fb)
     scale = Scale()
 
     # Set scale calibration
