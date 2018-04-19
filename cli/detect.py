@@ -33,7 +33,7 @@ class Detect:
         self.filename = None
         self.items = []
         self.itemNames = [
-                'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 
+                'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 'clementine', 
                 'tomato', 'tomatoes', 'celery', 'cheese', 'ketchup', 'mustard', 
                 'soda', 'pop', 'cola', 'beer', 'founders all day ipa', 'water', 
                 'bottled water'
@@ -69,8 +69,8 @@ class Detect:
             camera.color_effects = None
             camera.drc_strength = 'off'
             camera.rotation = 0
-            camera.hflip = False
-            camera.vflip = False
+            camera.hflip = True
+            camera.vflip = True
             camera.crop = (0.0, 0.0, 1.0, 1.0)
             
             # Turn on LEDs
@@ -99,7 +99,11 @@ class Detect:
                     },
                     'features': [{
                         'type': 'WEB_DETECTION',
-                        'maxResults': 10
+                        'maxResults': 10,
+                        },
+                        {
+                        'type': 'LABEL_DETECTION',
+                        'maxResults' : 10,
                     }]
                 }]
             })
@@ -112,6 +116,7 @@ class Detect:
         print('Searching for item match')
         #print(json.dumps(self.response, indent=4, sort_keys=True))
 
+        self.match = False
         self.items = []     # Clear item list
 
         # Get current list of items from Firebase
@@ -120,7 +125,17 @@ class Detect:
 
         # Get best guess label from response
         bestGuess = self.response['responses'][0]['webDetection']['bestGuessLabels'][0]['label']
+
+        labelLength = len(self.response['responses'][0]['labelAnnotations'])
+        print(self.response['responses'][0]['labelAnnotations'][0]['description'])
+        labelAnnotations = [0]*labelLength
+
+        for i in range(labelLength):
+            labelAnnotations[i] = self.response['responses'][0]['labelAnnotations'][i]['description']
+
         print('Best guess: {}'.format(bestGuess))
+        print('Label annotations: {}'.format(labelAnnotations))
+
 
         # Match each "known" item(s) with item(s) in response
         for i in range(len(self.itemNames)):
@@ -128,13 +143,16 @@ class Detect:
                 self.items.append(self.itemNames[i]) 
                 self.match = True
 
-        # If no specific item(s) matched, assume best guess label is right
-        # This could cause unexpected items, like walls, to be added to list
-        #if self.match is False:
-        #   newItem = bestGuess.replace(' png', '')
-        #   self.items.append(newItem)
+        # If best guess label doesn't match, try labal annotations
+        if self.match is False:
+            for i in range(len(self.itemNames)):
+                for j in range(labelLength):
+                    if self.itemNames[i] in labelAnnotations[j]:
+                        self.items.append(self.itemNames[i])
+
         print('Item(s) matched: {}'.format(self.items))
-        
+
+
         # Determine what items in list are not in response
         itemSet = set(self.items)
         listSet = set(currList)

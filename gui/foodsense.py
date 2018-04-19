@@ -1,5 +1,5 @@
-import sys
 import time
+import sys
 
 try:
     from firebase import Firebase
@@ -10,11 +10,10 @@ except ImportError:
     print('Failed to import required Food Sense modules')
     sys.exit(1)
 
-# Entrypoint
 def foodSense():
     print('Starting Food Sense')
-
-    # Begin initializing necessary components)
+    
+    # Begin initializing necessary components
     fb = Firebase()
     detect = Detect(fb)
     monitor = Monitoring(fb)
@@ -25,42 +24,34 @@ def foodSense():
     scale.reset()
     scale.tare()
 
-    ### START DEBUG ###
-    ### END DEBUG ###
-
-    ### MAIN LOOP ###
-    while True:
-        while monitor.powerOn:
-            print('Power is on')
+    while monitor.powerOn:
+        print('Power is on')
+        time.sleep(1)
+        
+        while monitor.doorClosed():
+            print('Door is closed')
+            monitor.checkTemp()
             time.sleep(1)
-            
-            while monitor.doorClosed():
-                print('Door is closed')
-                monitor.checkTemp()
-                time.sleep(1)
 
-                if monitor.doorOpen():
-                    print('Door was opened')
-                    monitor.startDoorTimer()
-                    
-                    while monitor.doorOpen():
-                        print('Waiting for door to close')
-                        monitor.checkDoorTimer()
-                        monitor.checkTemp()
-                        time.sleep(1)
-                    else:
-                        print('Door was closed')
-
-                        scale.getWeight()
-                        detect.getImage()
-                        detect.detectItem()
-                        detect.parseResponse(scale.weight)
+            if monitor.doorOpen():
+                print('Door was opened')
+                monitor.startDoorTimer()
+                
+                while monitor.doorOpen():
+                    print('Waiting for door to close')
+                    monitor.checkDoorTimer()
+                    monitor.checkTemp()
+                    time.sleep(1)
                 else:
-                    pass
+                    print('Door was closed')
+
+                    scale.getWeight()
+                    detect.getImage()
+                    detect.detectItem()
+                    detect.parseResponse(scale.weight)
             else:
-                print('Door must be closed on program startup')
+                pass
         else:
-            monitor.powerSave()
+            print('Door must be closed on program startup')
     else:
-        pass
-    ### END MAIN LOOP ###
+        monitor.powerSave()
