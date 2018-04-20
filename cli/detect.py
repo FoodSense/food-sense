@@ -32,13 +32,14 @@ class Detect:
 
         self.filename = None
         self.items = []
-        self.itemNames = [
+        self.knownItems = [
                 'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 'clementine', 
                 'tomato', 'tomatoes', 'celery', 'cheese', 'ketchup', 'mustard', 
                 'soda', 'pop', 'cola', 'beer', 'founders all day ipa', 'water', 
                 'bottled water'
                 ]
 
+        self.knownItemsLen = len(self.knownItems)
         self.LED = LED
         self.match = False
         self.response = None
@@ -114,61 +115,74 @@ class Detect:
     # one item at a time, especially "known" items.
     def parseResponse(self, weight=0):
         print('Searching for item match')
-        #print(json.dumps(self.response, indent=4, sort_keys=True))
+        print(json.dumps(self.response, indent=4, sort_keys=True))
 
-        self.match = False
-        self.items = []     # Clear item list
-
+        match = False
+        matched = []
+        unmatched = []
+        
         # Get current list of items from Firebase
         currList = self.fb.getList()
+        listLen = len(currList)
         print('Current list: {}'.format(currList))
 
         # Get best guess label from response
-        bestGuess = self.response['responses'][0]['webDetection']['bestGuessLabels'][0]['label']
+        bestGuess = (self.response['responses'][0]['webDetection']['bestGuessLabels'][0]['label']).lower()
 
+        # Get web entities from response
+        webLength = len(self.response['responses'][0]['webDetection']['webEntities'])
+        webEntities = [0]*webLength
+        for i in range(webLength):
+            if 'description' not in self.response['responses'][0]['webDetection']['webEntities'][i]:
+                webEntities[i] = ''
+            else:
+                webEntities[i] = (self.response['responses'][0]['webDetection']['webEntities'][i]['description']).lower()
+            
+        # Get label annotations from response
         labelLength = len(self.response['responses'][0]['labelAnnotations'])
-        print(self.response['responses'][0]['labelAnnotations'][0]['description'])
         labelAnnotations = [0]*labelLength
-
         for i in range(labelLength):
-            labelAnnotations[i] = self.response['responses'][0]['labelAnnotations'][i]['description']
+            if 'description' not in self.response['responses'][0]['labelAnnotations'][i]:
+                labelAnnotations[i] = ''
+            else:
+                labelAnnotations[i] = (self.response['responses'][0]['labelAnnotations'][i]['description']).lower()
 
         print('Best guess: {}'.format(bestGuess))
+        print('Web entities: {}'.format(webEntities))
         print('Label annotations: {}'.format(labelAnnotations))
 
+        # Match each known item with item(s) in response
+        for i in range(self.knownItemsLen):
+            if self.knownItems[i] in bestGuess:
+                matched.extend(self.knownItems[i]) 
 
-        # Match each "known" item(s) with item(s) in response
-        for i in range(len(self.itemNames)):
-            if self.itemNames[i] in bestGuess:
-                self.items.append(self.itemNames[i]) 
-                self.match = True
+        # If best guess doesn't match, try web entities
+        matched.extend([item for item in self.knownItems if item in webEntities])
 
-        # If best guess label doesn't match, try labal annotations
-        if self.match is False:
-            for i in range(len(self.itemNames)):
-                for j in range(labelLength):
-                    if self.itemNames[i] in labelAnnotations[j]:
-                        self.items.append(self.itemNames[i])
+        # If web entities doesn't match, try label annotations
+        matched.extend([item for item in self.knownItems if item in labelAnnotations])
 
-        print('Item(s) matched: {}'.format(self.items))
+        matchedLen = len(matched)
+        print('Item(s) matched: {}'.format(matched))
 
-
-        # Determine what items in list are not in response
-        itemSet = set(self.items)
-        listSet = set(currList)
-        unmatched = itemSet.symmetric_difference(listSet)
+        # Determine what in fridge were not found from the image
+        for item in currList:
+            if item in matched:
+                pass
+            else:
+                unmatched.append(item)
         print('Items in list that were not matched: {}'.format(unmatched))
         
         # Remove all items that were not found in response
-        for i in unmatched:
-            self.fb.removeItem(str(i))
-            self.fb.addShopping(str(i))
+        for item in unmatched:
+            self.fb.removeItem(str(item))
+            self.fb.addShopping(str(item))
 
         # Add all items that were found in response
-        numItems = len(self.items)
-        for i in range(numItems):
-            self.fb.addItem(str(self.items[i]), str(weight/numItems), str(self.timestamp + i))
-            self.fb.removeShopping(str(self.items[i]))
+        for item in matched:
+            self.fb.addItem(str(item), str(weight/matchedLen), str(self.timestamp + i))
+            self.fb.removeShopping(str(item))
 
         # Upload latest image to Firebase Storage
-        self.fb.uploadImage(self.filename)
+        if matched:
+            self.fb.uploadImage(self.filename)

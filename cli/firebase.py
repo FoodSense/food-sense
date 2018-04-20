@@ -69,7 +69,7 @@ class Firebase:
             match = self.db.collection(u'shopping_list').where(u'name', u'==', name).get()
             for doc in match:
                 item = doc.id
-            self.db.collection(u'shopping_list').document(item).delete()
+            self.db.collection(u'shopping_list').document(str(item)).delete()
         except google.cloud.exceptions.NotFound:
             print('No match found for {}'.format(name))
 
