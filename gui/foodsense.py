@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from queue import Queue
 from queue import Empty
 import tkinter as tk
@@ -19,16 +20,17 @@ class Thread(threading.Thread):
     
     # Initialize Thread class
     def __init__(self, queue):
+        print('Initializing Thread')
+
+        # Initilize thread
         threading.Thread.__init__(self)
-        
         self.event = threading.Event()
+
+        # Assign queue
         self.q = queue
-        self.q.put('Initializing Thread')
 
     # Run Food Sense in thread
     def run(self):
-        self.q.put('Starting Food Sense')
-        
         # Initialize objects
         f = Firebase(self.q)
         d = Detect(f, self.q)
@@ -40,13 +42,14 @@ class Thread(threading.Thread):
         s.reset()
         s.tare()
 
+        self.q.put('Ready')
+        
         # Loop until stop event is set
         while not self.event.is_set():
 
             # Loop while RPi is on AC power
             while m.powerOn:
-                self.q.put('Power is on')
-                time.sleep(1)
+                #print('Power is on')
 
                 # Check if stop hsa been set
                 if self.event.is_set():
@@ -54,38 +57,56 @@ class Thread(threading.Thread):
 
                 # Loop while fridge door is closed
                 while m.doorClosed():
-                    self.q.put('Door is closed')
+                    #print('Door is closed')
                     m.checkTemp()
-                    time.sleep(1)
                     
                     # Check if stop hsa been set
                     if self.event.is_set():
                         break
 
-                    if m.doorOpen():
-                        self.q.put('Door was opened')
-                        m.startDoorTimer()
+                    #if m.doorOpen():
+                        #print('Door was opened')
+                        #self.q.put('Door opened')
+                        #m.startDoorTimer()
                         
-                        while m.doorOpen():
-                            self.q.put('Waiting for door to close')
-                            m.checkDoorTimer()
-                            m.checkTemp()
-                            time.sleep(1)
-                        else:
-                            self.q.put('Door was closed')
+                        #while m.doorOpen():
+                            #print('Waiting for door to close')
+                            #self.q.put('Waiting for door to close')
+                            #m.checkDoorTimer()
+                            #m.checkTemp()
+                        #else:
+                            #print('Door closed')
+                            #self.q.put('Door closed')
 
-                            s.getWeight()
-                            d.getImage()
-                            d.detectItem()
-                            d.parseResponse(s.weight)
-                    else:
-                        pass
+                            #s.getWeight()
+                            #d.getImage()
+                            #d.detectItem()
+                            #d.parseResponse(s.weight)
+
                 else:
-                    self.q.put('Door must be closed on program startup')
+                    #print('Door must be closed on program startup')
+                    #self.q.put('Door must be closed on program startup')
+                    print('Door was opened')
+                    self.q.put('Door opened')
+                    m.startDoorTimer()
+                    
+                    while m.doorOpen():
+                        print('Waiting for door to close')
+                        #self.q.put('Waiting for door to close')
+                        m.checkDoorTimer()
+                        m.checkTemp()
+                    else:
+                        print('Door closed')
+                        self.q.put('Door closed')
+
+                        s.getWeight()
+                        d.getImage()
+                        d.detectItem()
+                        d.parseResponse(s.weight)
             else:
                 m.powerSave()
-        else:
-            f.close()   # Firebase app must be closed before we can create another instance
+
+        f.close()   # Firebase app must be closed before we can create another instance
 
 
 class GUI(tk.Frame):
@@ -103,7 +124,7 @@ class GUI(tk.Frame):
         self.queue = Queue()
 
         # Set up text box and vertical scroll bar
-        self.text = tk.Text(self, height=6, width=40)
+        self.text = tk.Text(self, height=40, width=120)
         self.vsb = tk.Scrollbar(self, orient="vertical", command=self.text.yview)
         self.text.configure(yscrollcommand=self.vsb.set)
         self.vsb.pack(side='right', fill='y')
@@ -111,32 +132,34 @@ class GUI(tk.Frame):
         
         # Start button
         self.startButton = tk.Button(self, command=self.startClick)
-        self.startButton.configure(text='Start', background="Green")
+        self.startButton.configure(text='Start Food Sense', background="Green")
         self.startButton.pack(side='left', fill='both', expand=True)
 
         # Stop button
         self.stopButton = tk.Button(self, command=self.stopClick)
-        self.stopButton.configure(text="Stop", background="Red")
+        self.stopButton.configure(text="Stop Food Sense", background="Red")
         self.stopButton.pack(side='right', fill='both', expand=True)
 
     # Start Food Sense thread
     def startClick(self):
         print('Start clicked')
+        self.queue.put('Starting Food Sense')
 
         self.thread = Thread(self.queue)
+        self.thread.daemon = True
         self.thread.start()
 
     # Stop Food Sense thread
     def stopClick(self):
         print('Stop clicked')
-
+        self.queue.put('Stopping Food Sense')
+        
         self.thread.event.set()
         self.therad = None
         time.sleep(5)
 
     # Send output to gui
     def updateScreen(self):
-        print('Updating screen')
 
         try:
             msg = self.queue.get_nowait()
@@ -145,10 +168,12 @@ class GUI(tk.Frame):
         except Empty:
             pass
                     
-        self.after(1000, self.updateScreen)
+        self.after(500, self.updateScreen)
+
 
 if __name__ == '__main__':
     window = tk.Tk()
+    window.wm_title('Food Sense')
     
     frame = GUI(window)
     frame.pack(fill='both', expand=True)

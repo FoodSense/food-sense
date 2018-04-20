@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import sys
 
 try:
@@ -10,6 +11,7 @@ try:
 except ImportError:
     print('Failed to import all necessary packages for Storage class')
     sys.exit(1)
+
 
 class Firebase:
     def __init__(self, queue):
@@ -38,8 +40,8 @@ class Firebase:
 
     # Add new item to Firebase
     def addItem(self, name, weight, dts):
-        print('Adding {} to firelist'.format(name))
-        self.q.put('Adding {} to firelist'.format(name))
+        print('Adding {} to list'.format(name))
+        self.q.put('Adding {} to list'.format(name))
 
         # Data fields for key
         data = { u'name': name, u'weight': weight, u'dts': dts }
@@ -64,7 +66,6 @@ class Firebase:
     # Add item to shopping list
     def addShopping(self, name):
         print('Adding {} to shopping list'.format(name))
-        self.q.put('Adding {} to shopping list'.format(name))
 
         data = { u'name': name }
         self.db.collection(u'shopping_list').document(name).set(data)
@@ -72,10 +73,9 @@ class Firebase:
     # Remove item from shopping list
     def removeShopping(self, name):
         print('Removing {} from shopping list'.format(name))
-        self.q.put('Removing {} from shopping list'.format(name))
         
         try:
-            item = []
+            item = None
             match = self.db.collection(u'shopping_list').where(u'name', u'==', name).get()
             for doc in match:
                 item = doc.id
@@ -86,7 +86,6 @@ class Firebase:
     # Search Firebase for name
     def searchName(self, name):
         print('Searching for name {}'.format(name))
-        self.q.put('Searching for name {}'.format(name))
 
         dict = None
         matches = self.db.collection(u'list').where(u'name', u'==', name).get()
@@ -159,7 +158,7 @@ class Firebase:
     # Print shopping list
     def printShopping(self):
         print('Printing shopping list')
-        self.q.put('Print shopping list')
+        self.q.put('Printing shopping list')
         
         dict = None
         docs = self.db.collection(u'shopping_list').get()

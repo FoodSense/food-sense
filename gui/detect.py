@@ -1,5 +1,5 @@
 import base64
-import json
+#!/usr/bin/python3
 import logging
 import time
 import sys
@@ -12,6 +12,7 @@ try:
 except ImportError:
     print('Failed to import required Detect class modules')
     sys.exit(1)
+
 
 class Detect:
     def __init__(self, firebase, queue, LED=27):
@@ -33,12 +34,13 @@ class Detect:
             self.serviceAccount, scopes=self.scopes)
         self.client = discovery.build('vision', 'v1', credentials=self.credentials)
 
+        # Class member variables
         self.filename = None
         self.items = []
         self.knownItems = [
                 'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 
-                'tomato', 'tomatoes', 'celery', 'cheese', 'ketchup', 'mustard', 
-                'soda', 'pop', 'cola', 'beer', 'water', 'bottled water'
+                'tomato', 'tomatoes', 'cheese', 'ketchup', 'mustard', 
+                'soda', 'pop', 'cola', 'milk', 'beer', 'water', 'bottled water'
                 ]
 
         self.knownItemsLen = len(self.knownItems)
@@ -54,9 +56,11 @@ class Detect:
 
     # Use Pi Camera to capture an image; toggle LEDs
     def getImage(self):
+        print('Capturing image')
         self.q.put('Capturing image')
+        
         self.timestamp = time.time()
-        self.filename = '../images/' + str(self.timestamp) + '.png'
+        self.filename = '/home/pi/food-sense/images/' + str(self.timestamp) + '.jpg'
 
         # Camera init and settings
         with PiCamera() as camera:
@@ -72,16 +76,12 @@ class Detect:
             camera.color_effects = None
             camera.drc_strength = 'off'
             camera.rotation = 0
-            camera.hflip = True
-            camera.vflip = True
+            camera.hflip = False
+            camera.vflip = False
             camera.crop = (0.0, 0.0, 1.0, 1.0)
             
             # Turn on LEDs
             GPIO.output(self.LED, True)
-
-            # Begiin preview, pause for two seconds
-            camera.start_preview()
-            time.sleep(1.5)
 
             # Capture image
             camera.capture(self.filename)
@@ -91,6 +91,7 @@ class Detect:
 
     # Detect using custom JSON request
     def detectItem(self):
+        print('Detecting item')
         self.q.put('Detecting item')
 
         with open(self.filename, 'rb') as image:
@@ -115,9 +116,9 @@ class Detect:
     # Parse Vision API repsonse to find items
     # This is most effective when only adding or removing
     # one item at a time, especially "known" items.
-    def parseResponse(self, weight=0):
+    def parseResponse(self, weight):
+        print('Searching for item match')
         self.q.put('Searching for item match')
-        #print(json.dumps(self.response, indent=4, sort_keys=True))
 
         match = False
         matched = []
@@ -156,7 +157,7 @@ class Detect:
         # Match each known item with item(s) in response
         for i in range(self.knownItemsLen):
             if self.knownItems[i] in bestGuess:
-                matched.extend(self.knownItems[i]) 
+                matched.append(self.knownItems[i]) 
 
         # If best guess doesn't match, try web entities
         matched.extend([item for item in self.knownItems if item in webEntities])
@@ -164,9 +165,12 @@ class Detect:
         # If web entities doesn't match, try label annotations
         matched.extend([item for item in self.knownItems if item in labelAnnotations])
 
+        # Remove duplicate entries
+        matched = list(set(matched))
+
         matchedLen = len(matched)
         print('Item(s) found: {}'.format(matched))
-        self.q.put('Item(s) found: {}'.format(matched))
+        self.q.put('Adding to list: {}'.format(matched))
         
         # Determine what in fridge were not found from the image
         for item in currList:
@@ -175,17 +179,20 @@ class Detect:
             else:
                 unmatched.append(item)
         print('Items in list that were not found: {}'.format(unmatched))
-        self.q.put('Items in list that were not found: {}'.format(unmatched))
+        self.q.put('Removing from list: {}'.format(unmatched))
         
         # Remove all items that were not found in response
         for item in unmatched:
-            self.fb.removeItem(str(item))
-            self.fb.addShopping(str(item))
+            self.fb.removeItem(item)
+            self.fb.addShopping(item)
 
         # Add all items that were found in response
+        #for i in range(matchedLen):
         for item in matched:
-            self.fb.addItem(str(item), str(weight/matchedLen), str(self.timestamp + i))
-            self.fb.removeShopping(str(item))
+            if matchedLen > 1:
+                self.timestamp += 1
+            self.fb.addItem(item, str(weight/matchedLen), str(self.timestamp))
+            self.fb.removeShopping(item)
 
         # Upload latest image to Firebase Storage
         if matched:

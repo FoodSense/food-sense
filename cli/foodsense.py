@@ -64,3 +64,6 @@ def foodSense():
     else:
         pass
     ### END MAIN LOOP ###
+
+if __name__ == '__main__':
+    foodSense()

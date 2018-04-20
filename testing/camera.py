@@ -27,8 +27,8 @@ try:
         camera.color_effects = None
         camera.drc_strength = 'off'
         camera.rotation = 0
-        camera.hflip = True
-        camera.vflip = True
+        camera.hflip = False
+        camera.vflip = False
         camera.crop = (0.0, 0.0, 1.0, 1.0)
 
         GPIO.output(LED, True)

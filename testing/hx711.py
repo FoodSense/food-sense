@@ -9,7 +9,6 @@ except ImportError:
     print('Error importing RPi.GPIO')
     sys.exit(1)
 
-
 class HX711:
     def __init__(self, dout=22, pd_sck=17, gain=128, bitsToRead=24):
         self.PD_SCK = pd_sck

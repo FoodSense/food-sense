@@ -25,6 +25,7 @@ class Scale:
         
         # Weight value that will be used by storage class
         self.weight = 0
+        self.average = 0
         self.prevWeight = 0
     
     def newMeasure(self):
@@ -49,7 +50,7 @@ class Scale:
             lambda val: abs(val - avg) <= max_permitted_delta, self.history
         ))
 
-        return statistics.mean(valid_values)
+        self.average = statistics.mean(valid_values)
 
     def getWeight(self, samples=None):
         """Get weight for once in a while. It clears history first."""
@@ -60,9 +61,9 @@ class Scale:
         self.prevWeight = self.weight
         val = self.getMeasure()
         self.weight = round(val / 50) * 50
-        
-        print('Weight recorded: {} g'.format(self.weight))
-        self.q.put('Weight recorded: {} g'.format(self.weight))
+
+        print('Weight recorded: {}'.format(self.weight))
+        self.q.put('Weight recorded: {}'.format(self.weight))
 
     def tare(self, times=25):
         self.source.tare(times)

@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import sys
 import time
 
@@ -9,9 +10,13 @@ except ImportError:
     print('Failed to import all necessary Monitor packages')
     sys.exit(1)
 
+
 class Monitoring:
-    def __init__(self, firebase, DOOR=5, POWER=6):
+    def __init__(self, firebase, queue, DOOR=5, POWER=6):
         print('Initializing System Monitoring')
+
+        # Queue
+        self.q = queue
 
         # Initialize Firebase object as base of Monitoring
         self.fb = firebase
@@ -64,10 +69,10 @@ class Monitoring:
         else:
             self.initTempNotify = False
 
-        print('Temp: {}C'.format(self.temp))
+        print('Temp: {} C'.format(self.temp))
 
     # True if door is closed
-    def doorClosed(self):  
+    def doorClosed(self):
         return GPIO.input(self.DOOR)
 
     # True if door is open
@@ -90,6 +95,9 @@ class Monitoring:
 
     # Wait for power to be restored
     def powerSave(self):
+        print('Power save mode enabled')
+        self.q.put('Power save mode enabled')
+
         while not GPIO.input(self.POWER):
             self.checkTemp()
 
@@ -107,15 +115,15 @@ class Monitoring:
 
     # Check if door notification timer has been exceeded
     def checkDoorTimer(self):
-        if (time.time() - self.doorTime) >= self.maxDoorTime:
+        if (time.time() - self.doorTime) > self.maxDoorTime:
             self.fb.doorWarning()
 
     # Check if power notification timer has been exceeded
     def checkPowerTimer(self):
-        if (time.time() - self.powerTime) >= self.maxPowerTime:
+        if (time.time() - self.powerTime) > self.maxPowerTime:
             self.fb.powerWarning()
 
     # Check if temp notification timer has been exceeded
     def checkTempTimer(self):
-        if (time.time() - self.tempTime) >= self.maxTempTime:
+        if (time.time() - self.tempTime) > self.maxTempTime:
             self.fb.tempWarning()
