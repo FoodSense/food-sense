@@ -30,6 +30,9 @@ class Firebase:
         self.apiKey = 'AAAAYDyGdIE:APA91bHW_WpPWEjG-GgxwszERAfIADupdxKiyzZjoI_O84j4Xv6XQnjXugRAC07b0wtWWC3A9S_7miYEHYs4T_R8SI0x6EK3McxmR7AJ-4UEARp9wgiCsv5K0Z57-yJqiELIj8ACflyY'
         self.pushService = FCMNotification(api_key=self.apiKey)
 
+    def close(self):
+        firebase_admin.delete_app(firebase_admin.get_app())
+
     # Add new item to Firebase
     def addItem(self, name, weight, dts):
         print('Adding {} to firelist'.format(name))
