@@ -12,8 +12,11 @@ except ImportError:
     sys.exit(1)
 
 class Firebase:
-    def __init__(self):
-        print('Initializing Storage object')
+    def __init__(self, queue):
+        print('Initializing Storage')
+
+        # Queue
+        self.q = queue
 
         # Authenticate with Firebase using AdminSDK service account
         self.cred = credentials.Certificate(
@@ -36,6 +39,7 @@ class Firebase:
     # Add new item to Firebase
     def addItem(self, name, weight, dts):
         print('Adding {} to firelist'.format(name))
+        self.q.put('Adding {} to firelist'.format(name))
 
         # Data fields for key
         data = { u'name': name, u'weight': weight, u'dts': dts }
@@ -46,6 +50,7 @@ class Firebase:
     # Remove item by name
     def removeItem(self, name):
         print('Removing {} from list'.format(name))
+        self.q.put('Removing {} from list'.format(name))
 
         try:
             item = None
@@ -59,6 +64,7 @@ class Firebase:
     # Add item to shopping list
     def addShopping(self, name):
         print('Adding {} to shopping list'.format(name))
+        self.q.put('Adding {} to shopping list'.format(name))
 
         data = { u'name': name }
         self.db.collection(u'shopping_list').document(name).set(data)
@@ -66,7 +72,8 @@ class Firebase:
     # Remove item from shopping list
     def removeShopping(self, name):
         print('Removing {} from shopping list'.format(name))
-
+        self.q.put('Removing {} from shopping list'.format(name))
+        
         try:
             item = []
             match = self.db.collection(u'shopping_list').where(u'name', u'==', name).get()
@@ -79,6 +86,7 @@ class Firebase:
     # Search Firebase for name
     def searchName(self, name):
         print('Searching for name {}'.format(name))
+        self.q.put('Searching for name {}'.format(name))
 
         dict = None
         matches = self.db.collection(u'list').where(u'name', u'==', name).get()
@@ -90,6 +98,7 @@ class Firebase:
     # Search Firebase for weight
     def searchWeight(self, weight):
         print('Searching for weight {}'.format(weight))
+        self.q.put('Searching for weight {}'.format(weight))
 
         dict = None
         matches = self.db.collection(u'list').where(u'weight', u'==', weight).get()
@@ -101,6 +110,7 @@ class Firebase:
     # Search Firebase for timestamp
     def searchTimestamp(self, timestamp):
         print('Searching for timestamp {}'.format(timestamp))
+        self.q.put('Searching for timestamp {}'.format(timestamp))
 
         match = self.db.collection(u'list').document(timestamp)
         try:
@@ -136,6 +146,7 @@ class Firebase:
     # Print list
     def printList(self):
         print('Printing list')
+        self.q.put('Printing list')
 
         dict = None
         docs = self.db.collection(u'list').get()
@@ -143,11 +154,12 @@ class Firebase:
             if doc.id != u'default':
                 dict = doc.to_dict()
                 print(u'{}'.format(dict['name']))
-
+                self.q.put(u'{}'.format(dict['name']))
 
     # Print shopping list
     def printShopping(self):
-        print('Printin shopping list')
+        print('Printing shopping list')
+        self.q.put('Print shopping list')
         
         dict = None
         docs = self.db.collection(u'shopping_list').get()
@@ -155,10 +167,12 @@ class Firebase:
             if doc.id != u'default':
                 dict = doc.to_dict()
                 print(u'{}'.format(dict['name']))
+                self.q.put(u'{}'.format(dict['name']))
 
     # Upload image to Storage
     def uploadImage(self, filename):
         print('Uploading image to Firebase Storage')
+        self.q.put('Uploading image to Firebase Storage')
 
         blob = self.bucket.blob('contents')
         blob.upload_from_filename(filename=filename)
@@ -166,6 +180,7 @@ class Firebase:
     # Send list updated notification to app
     def listUpdated(self):
         print('List updated push notification')
+        self.q.put('List updated')
 
         message = 'The list has been updated'
 
@@ -178,6 +193,7 @@ class Firebase:
     # Send door warning notification to app
     def doorWarning(self):
         print('Door push notification')               
+        self.q.put('Door has been left open')
 
         message = 'The door has been open for more than 2 minutes!'
 
@@ -190,6 +206,7 @@ class Firebase:
     # Send temp warning notification to app
     def tempWarning(self):
         print('Temp push notification')
+        self.q.put('Temperature in the fridge has exceeded safe limits')
 
         message = 'Temperature has exceeded safe limits!'
 
@@ -202,6 +219,7 @@ class Firebase:
     # Send power warning notificaiton to app
     def powerWarning(self):
         print('Power push notification')
+        self.q.put('Power has failed. Now operating on battery power')
 
         message = 'Power failure: Food Sense is now operating on battery power'
 

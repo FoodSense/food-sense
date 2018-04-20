@@ -11,7 +11,7 @@ except ImportError:
 
 class Monitoring:
     def __init__(self, firebase, DOOR=5, POWER=6):
-        print('Initializing System Monitoring object')
+        print('Initializing System Monitoring')
 
         # Initialize Firebase object as base of Monitoring
         self.fb = firebase

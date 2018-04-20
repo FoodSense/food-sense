@@ -9,6 +9,7 @@ except ImportError:
     sys.exit(1)
 class Scale:
     def __init__(self, dout=22, pd_sck=17, source=None, samples=20, spikes=4, sleep=0.1):
+        print('Initializing Scale')
 
         self.source = source or HX711(dout, pd_sck)
         self.samples = samples

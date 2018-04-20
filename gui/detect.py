@@ -14,11 +14,14 @@ except ImportError:
     sys.exit(1)
 
 class Detect:
-    def __init__(self, firebase, LED=27):
-        print('Initializing Detect object')
+    def __init__(self, firebase, queue, LED=27):
+        print('Initializing Detect')
 
         # Initialize Firebase object as base of Detect
         self.fb = firebase
+
+        # Queue
+        self.q = queue
 
         # Suppress logging errors
         logging.getLogger('googleapiclient.discovery_cache').setLevel(logging.ERROR)
@@ -33,10 +36,9 @@ class Detect:
         self.filename = None
         self.items = []
         self.knownItems = [
-                'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 'clementine', 
+                'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 
                 'tomato', 'tomatoes', 'celery', 'cheese', 'ketchup', 'mustard', 
-                'soda', 'pop', 'cola', 'beer', 'founders all day ipa', 'water', 
-                'bottled water'
+                'soda', 'pop', 'cola', 'beer', 'water', 'bottled water'
                 ]
 
         self.knownItemsLen = len(self.knownItems)
@@ -52,7 +54,7 @@ class Detect:
 
     # Use Pi Camera to capture an image; toggle LEDs
     def getImage(self):
-        print('Capturing image')
+        self.q.put('Capturing image')
         self.timestamp = time.time()
         self.filename = '../images/' + str(self.timestamp) + '.png'
 
@@ -89,7 +91,7 @@ class Detect:
 
     # Detect using custom JSON request
     def detectItem(self):
-        print('Detecting item')
+        self.q.put('Detecting item')
 
         with open(self.filename, 'rb') as image:
             base64img = base64.b64encode(image.read())
@@ -114,8 +116,8 @@ class Detect:
     # This is most effective when only adding or removing
     # one item at a time, especially "known" items.
     def parseResponse(self, weight=0):
-        print('Searching for item match')
-        print(json.dumps(self.response, indent=4, sort_keys=True))
+        self.q.put('Searching for item match')
+        #print(json.dumps(self.response, indent=4, sort_keys=True))
 
         match = False
         matched = []
@@ -163,15 +165,17 @@ class Detect:
         matched.extend([item for item in self.knownItems if item in labelAnnotations])
 
         matchedLen = len(matched)
-        print('Item(s) matched: {}'.format(matched))
-
+        print('Item(s) found: {}'.format(matched))
+        self.q.put('Item(s) found: {}'.format(matched))
+        
         # Determine what in fridge were not found from the image
         for item in currList:
             if item in matched:
                 pass
             else:
                 unmatched.append(item)
-        print('Items in list that were not matched: {}'.format(unmatched))
+        print('Items in list that were not found: {}'.format(unmatched))
+        self.q.put('Items in list that were not found: {}'.format(unmatched))
         
         # Remove all items that were not found in response
         for item in unmatched:
