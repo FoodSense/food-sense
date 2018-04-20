@@ -49,50 +49,25 @@ class Thread(threading.Thread):
 
             # Loop while RPi is on AC power
             while m.powerOn:
-                #print('Power is on')
 
-                # Check if stop hsa been set
+                # Check if stop has been set
                 if self.event.is_set():
                     break
 
                 # Loop while fridge door is closed
                 while m.doorClosed():
-                    #print('Door is closed')
                     m.checkTemp()
                     
                     # Check if stop hsa been set
                     if self.event.is_set():
                         break
-
-                    #if m.doorOpen():
-                        #print('Door was opened')
-                        #self.q.put('Door opened')
-                        #m.startDoorTimer()
-                        
-                        #while m.doorOpen():
-                            #print('Waiting for door to close')
-                            #self.q.put('Waiting for door to close')
-                            #m.checkDoorTimer()
-                            #m.checkTemp()
-                        #else:
-                            #print('Door closed')
-                            #self.q.put('Door closed')
-
-                            #s.getWeight()
-                            #d.getImage()
-                            #d.detectItem()
-                            #d.parseResponse(s.weight)
-
                 else:
-                    #print('Door must be closed on program startup')
-                    #self.q.put('Door must be closed on program startup')
                     print('Door was opened')
                     self.q.put('Door opened')
                     m.startDoorTimer()
                     
                     while m.doorOpen():
                         print('Waiting for door to close')
-                        #self.q.put('Waiting for door to close')
                         m.checkDoorTimer()
                         m.checkTemp()
                     else:
@@ -124,7 +99,7 @@ class GUI(tk.Frame):
         self.queue = Queue()
 
         # Set up text box and vertical scroll bar
-        self.text = tk.Text(self, height=40, width=120)
+        self.text = tk.Text(self, height=6, width=10)
         self.vsb = tk.Scrollbar(self, orient="vertical", command=self.text.yview)
         self.text.configure(yscrollcommand=self.vsb.set)
         self.vsb.pack(side='right', fill='y')
@@ -173,6 +148,8 @@ class GUI(tk.Frame):
 
 if __name__ == '__main__':
     window = tk.Tk()
+    w,h = window.winfo_screenwidth(), window.winfo_screenheight()
+    window.geometry('%dx%d+0+0' % (w,h))
     window.wm_title('Food Sense')
     
     frame = GUI(window)
