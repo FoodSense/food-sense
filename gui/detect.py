@@ -40,7 +40,7 @@ class Detect:
         self.knownItems = [
                 'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 
                 'tomato', 'tomatoes', 'cheese', 'ketchup', 'mustard', 
-                'soda', 'pop', 'cola', 'milk', 'beer', 'water', 'bottled water'
+                'soda', 'pop', 'cola', 'beer', 'water',
                 ]
 
         self.knownItemsLen = len(self.knownItems)
@@ -154,7 +154,7 @@ class Detect:
         print('Web entities: {}'.format(webEntities))
         print('Label annotations: {}'.format(labelAnnotations))
 
-        # Match each known item with item(s) in response
+        # Match each predetermined item with item(s) in response
         for i in range(self.knownItemsLen):
             if self.knownItems[i] in bestGuess:
                 matched.append(self.knownItems[i]) 
@@ -167,10 +167,6 @@ class Detect:
 
         # Remove duplicate entries
         matched = list(set(matched))
-
-        matchedLen = len(matched)
-        print('Item(s) found: {}'.format(matched))
-        self.q.put('Adding to list: {}'.format(matched))
         
         # Determine what in fridge were not found from the image
         for item in currList:
@@ -178,6 +174,10 @@ class Detect:
                 pass
             else:
                 unmatched.append(item)
+
+        print('Item(s) found: {}'.format(matched))
+        self.q.put('Adding to list: {}'.format(matched))
+        
         print('Items in list that were not found: {}'.format(unmatched))
         self.q.put('Removing from list: {}'.format(unmatched))
         
@@ -188,6 +188,7 @@ class Detect:
 
         # Add all items that were found in response
         #for i in range(matchedLen):
+        matchedLen = len(matched)
         for item in matched:
             if matchedLen > 1:
                 self.timestamp += 1
