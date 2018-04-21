@@ -33,7 +33,7 @@ class Monitoring:
         self.initTempNotify = False
 
         # Max value constants
-        self.maxTemp = 10.0
+        self.maxTemp = 15.0
         self.maxDoorTime = 120.0
         self.maxPowerTime = 120.0
         self.maxTempTime = 120.0
@@ -116,14 +116,17 @@ class Monitoring:
     # Check if door notification timer has been exceeded
     def checkDoorTimer(self):
         if (time.time() - self.doorTime) > self.maxDoorTime:
+        	self.initDoorNotify = False
             self.fb.doorWarning()
 
     # Check if power notification timer has been exceeded
     def checkPowerTimer(self):
         if (time.time() - self.powerTime) > self.maxPowerTime:
+            self.initPowerNotify = False
             self.fb.powerWarning()
 
     # Check if temp notification timer has been exceeded
     def checkTempTimer(self):
         if (time.time() - self.tempTime) > self.maxTempTime:
+            self.initTempNotify = False
             self.fb.tempWarning()
