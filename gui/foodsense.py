@@ -56,8 +56,8 @@ class Thread(threading.Thread):
 
                 # Loop while fridge door is closed
                 while m.doorClosed():
-                	if not m.powerOn():
-                		break
+                    if not m.powerOn():
+                        break
                     m.checkTemp()
                     
                     # Check if stop hsa been set
