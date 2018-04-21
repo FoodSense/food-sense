@@ -116,7 +116,7 @@ class Monitoring:
     # Check if door notification timer has been exceeded
     def checkDoorTimer(self):
         if (time.time() - self.doorTime) > self.maxDoorTime:
-        	self.initDoorNotify = False
+            self.initDoorNotify = False
             self.fb.doorWarning()
 
     # Check if power notification timer has been exceeded
