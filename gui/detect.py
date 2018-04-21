@@ -53,7 +53,6 @@ class Detect:
                 ]
 
         self.knownItemsLen = len(self.knownItems)
-        self.LED = LED
         self.match = False
         self.response = None
         self.timestamp = None
