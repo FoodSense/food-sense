@@ -15,8 +15,8 @@ except ImportError:
 
 
 class Detect:
-    def __init__(self, firebase, queue):        
-    	print('Initializing Detect')
+    def __init__(self, firebase, queue):
+        print('Initializing Detect')
 
         # Initialize Firebase object as base of Detect
         self.fb = firebase
