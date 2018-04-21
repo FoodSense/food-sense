@@ -33,8 +33,8 @@ class Monitoring:
         self.initTempNotify = False
 
         # Max value constants
-        self.maxTemp = 15.0
-        self.maxDoorTime = 120.0
+        self.maxTemp = 10.0
+        self.maxDoorTime = 30.0
         self.maxPowerTime = 120.0
         self.maxTempTime = 120.0
 
@@ -66,9 +66,6 @@ class Monitoring:
                 self.initTempNotify = True
             else:
                 self.checkTempTimer()
-        else:
-            self.initTempNotify = False
-
         print('Temp: {} C'.format(self.temp))
 
     # True if door is closed
