@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 from queue import Queue
 from queue import Empty
+import RPi.GPIO as GPIO
 import tkinter as tk
 import threading
 import time
