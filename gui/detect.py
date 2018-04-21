@@ -1,5 +1,5 @@
-import base64
 #!/usr/bin/python3
+import base64
 import logging
 import time
 import sys
@@ -15,8 +15,8 @@ except ImportError:
 
 
 class Detect:
-    def __init__(self, firebase, queue, LED=27):
-        print('Initializing Detect')
+    def __init__(self, firebase, queue):        
+    	print('Initializing Detect')
 
         # Initialize Firebase object as base of Detect
         self.fb = firebase
@@ -38,9 +38,18 @@ class Detect:
         self.filename = None
         self.items = []
         self.knownItems = [
-                'apple', 'apples', 'banana', 'bananas', 'orange', 'oranges', 
-                'tomato', 'tomatoes', 'cheese', 'ketchup', 'mustard', 
-                'soda', 'pop', 'cola', 'beer', 'water',
+                'apple', 'apples', 
+                'banana', 'bananas', 
+                'beer',
+                'carrot', 'carrots',
+                'cheese',
+                'cola', 'pop', 'soda',
+                'ketchup',
+                'milk',
+                'mustard',
+                'orange', 'oranges', 
+                'tomato', 'tomatoes',      
+                'water',
                 ]
 
         self.knownItemsLen = len(self.knownItems)
@@ -48,11 +57,6 @@ class Detect:
         self.match = False
         self.response = None
         self.timestamp = None
-
-        # Set up LED pin
-        GPIO.setwarnings(False)
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self.LED, GPIO.OUT)
 
     # Use Pi Camera to capture an image; toggle LEDs
     def getImage(self):
@@ -79,15 +83,9 @@ class Detect:
             camera.hflip = False
             camera.vflip = False
             camera.crop = (0.0, 0.0, 1.0, 1.0)
-            
-            # Turn on LEDs
-            GPIO.output(self.LED, True)
 
             # Capture image
             camera.capture(self.filename)
-        
-            # Turn off LEDs
-            GPIO.output(self.LED, False)
 
     # Detect using custom JSON request
     def detectItem(self):

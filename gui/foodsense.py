@@ -31,6 +31,12 @@ class Thread(threading.Thread):
 
     # Run Food Sense in thread
     def run(self):
+        # Set up LED pin
+        LED=27
+        GPIO.setwarnings(False)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(LED, GPIO.OUT)
+
         # Initialize objects
         f = Firebase(self.q)
         d = Detect(f, self.q)
@@ -66,10 +72,12 @@ class Thread(threading.Thread):
                 else:
                     print('Door was opened')
                     self.q.put('Door opened')
+                    GPIO.output(LED, True)
                     m.startDoorTimer()
                     
                     while m.doorOpen():
                         print('Waiting for door to close')
+                        
                         m.checkDoorTimer()
                         m.checkTemp()
                     else:
@@ -80,6 +88,7 @@ class Thread(threading.Thread):
                         d.getImage()
                         d.detectItem()
                         d.parseResponse(s.weight)
+                        GPIO.output(LED, False)
                         
                         print('Done')
                         self.q.put('Done')
@@ -105,19 +114,19 @@ class GUI(tk.Frame):
 
         # Set up text box and vertical scroll bar
         self.text = tk.Text(self, height=6, width=10)
-        self.vsb = tk.Scrollbar(self, orient="vertical", command=self.text.yview)
+        self.vsb = tk.Scrollbar(self, orient='vertical', command=self.text.yview)
         self.text.configure(yscrollcommand=self.vsb.set)
         self.vsb.pack(side='right', fill='y')
         self.text.pack(side='top', fill='both', expand=True)
         
         # Start button
         self.startButton = tk.Button(self, command=self.startClick)
-        self.startButton.configure(text='Start Food Sense', background="Green")
+        self.startButton.configure(text='Start Food Sense', background='Green')
         self.startButton.pack(side='left', fill='both', expand=True)
 
         # Stop button
         self.stopButton = tk.Button(self, command=self.stopClick)
-        self.stopButton.configure(text="Stop Food Sense", background="Red")
+        self.stopButton.configure(text='Stop Food Sense', background='Red')
         self.stopButton.pack(side='right', fill='both', expand=True)
 
     # Start Food Sense thread
