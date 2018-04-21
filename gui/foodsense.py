@@ -80,6 +80,9 @@ class Thread(threading.Thread):
                         d.getImage()
                         d.detectItem()
                         d.parseResponse(s.weight)
+                        
+                        print('Done')
+                        self.q.put('Done')
             else:
                 m.powerSave()
 
