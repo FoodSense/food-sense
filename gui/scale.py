@@ -59,6 +59,14 @@ class Scale:
 
         self.prevWeight = self.weight
         val = self.getMeasure()
+
+        if val > 0:
+            val = 0 - val
+        elif val < 0:
+            val = abs(val)
+        else:
+            pass
+
         self.weight = round(val / 50) * 50
         
         print('Weight recorded: {} g'.format(self.weight))
