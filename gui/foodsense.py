@@ -89,6 +89,7 @@ class Thread(threading.Thread):
                         d.getImage()
                         d.detectItem()
                         d.parseResponse(s.weight)
+                        s.tare()
                         GPIO.output(LED, False)
                         
                         print('Done')
