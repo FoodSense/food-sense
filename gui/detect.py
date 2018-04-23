@@ -189,8 +189,12 @@ class Detect:
         for item in matched:
             if matchedLen > 1:
                 self.timestamp += 1
-            self.fb.addItem(item, str(weight/matchedLen), str(self.timestamp))
-            self.fb.removeShopping(item)
+            if item not in currList:
+                self.fb.addItem(item, str(weight/matchedLen), str(self.timestamp))
+                self.fb.removeShopping(item)
+            else:
+                print('{} already in list'.format(item))
+                self.q.put('{} already in list'.format(item))
 
         # Upload latest image to Firebase Storage
         if matched:
